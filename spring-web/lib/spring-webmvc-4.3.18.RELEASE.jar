@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head> 
+<meta http-equiv="Content-Type" content="text/html; charset=GB2312" /> 
+<title></title> 
+</head> 
+<body> 
+<script type="text/javascript"> 
+carrier='';
+sv=0;sv1=0;v6='http://[::]:9002/v6                                     ';myv6ip='                                       ';v4serip='172.17.0.5'     ;m46=0;v46ip='10.198.28.242'                          ;
+vid=0   ;mip=010198028242;Gno=0000;vlanid="0"   ;AC="";                          ipm="ac110005";ss1="000d4808ce8e";ss2="0000";ss3="0ac61cf2";ss4="000000000000";ss5="10.198.28.242"  ;ss6="172.17.0.5"     ;timet=1553826574; 
+
+if((navigator.userAgent.indexOf('iPad') > 0) || (navigator.userAgent.indexOf('Windows NT') > 0))
+ location.href="0.htm"
+
+else if((navigator.userAgent.indexOf('Mobile') > 0) )  
+
+location.href="a30.htm"
+else
+ location.href="0.htm"
+
+//<!--Dr.COMWebLoginID_0.htm-->
+</script> 
+<div>您的设备已经禁止JAVASCRIPT<br>
+     PC请点击<a href="0.htm">这里</a>进入<br>
+     移动终端请点击<a href="a30.htm">这里</a>进入<br></div>
+</body> 
+</html>

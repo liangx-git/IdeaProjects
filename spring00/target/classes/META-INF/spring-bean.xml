@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+       default-autowire="constructor">
+
+    <!--<bean id="beanScope" class="com.liangx.bean.BeanScope" scope="prototype"></bean>-->
+
+    <!--<bean id="autoWiringService" class="com.liangx.autowiring.AutoWiringService"></bean>-->
+
+    <!--id="autoWiringDAO"-->
+    <!--<bean  class="com.liangx.autowiring.AutoWiringDAO"></bean>-->
+
+    <bean id="springResource" class="com.liangx.resource.SpringResource"></bean>
+
+</beans>
