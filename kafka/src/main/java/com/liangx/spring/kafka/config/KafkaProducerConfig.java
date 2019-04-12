@@ -4,6 +4,7 @@ package com.liangx.spring.kafka.config;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.common.WaterLevelRecordSerializer;
 import com.liangx.spring.kafka.producer.KafkaSendResultHandler;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -83,5 +84,10 @@ public class KafkaProducerConfig {
 //        return manager;
 //    }
 
+    //创建topic方法1.使用注解,创建TopicName为"liangx-message"，分区数为8, 副本为1
+    @Bean
+    public NewTopic initialTopic(){
+        return new NewTopic("liangx-message", 5, (short)1);
+    }
 }
 

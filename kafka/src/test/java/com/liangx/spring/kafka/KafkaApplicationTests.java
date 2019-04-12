@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 import java.util.Random;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class KafkaApplicationTests {
 
     //Autowired使用Type匹配方式自动装配，使用@Qualifier可以使得装载按照Name方式，
@@ -98,11 +98,11 @@ public class KafkaApplicationTests {
         int i = 0;
         double water_level = 50.0;
         while(true){
-            double inc = (1 + random.nextDouble()*(13 - 0)) - 7;
+            double inc = (random.nextDouble()*(15 - 0)) - 7;
             water_level += (water_level + inc) > 20 ? ((water_level + inc) < 80 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
             WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), i++, 104, "hohai", water_level);
             kafkaProducer.send("liangx-message", waterLevelRecord);
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
     }
 

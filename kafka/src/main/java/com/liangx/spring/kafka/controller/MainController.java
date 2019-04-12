@@ -1,14 +1,9 @@
 package com.liangx.spring.kafka.controller;
 
 import com.google.gson.Gson;
-import com.liangx.spring.kafka.common.ErrorCode;
-import com.liangx.spring.kafka.common.WaterLevelRecord;
-import com.liangx.spring.kafka.common.Response;
-import com.liangx.spring.kafka.consumer.KafkaConsumer;
+import com.liangx.spring.kafka.consumer.Impl.WebKafkaConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -20,19 +15,29 @@ public class MainController{
     private Gson gson = new Gson();
 
     @Autowired
-    private KafkaConsumer kafkaConsumer;
+    private WebKafkaConsumer webKafkaConsumer;
 
-    @RequestMapping(value="/monitor", method= RequestMethod.GET)
-    public String monitor(Model model){
-        kafkaConsumer.startListenerForWeb();
-        return "monitor";
-    }
-
-    @RequestMapping("/hello")
+    @RequestMapping("/monitor")
     public ModelAndView hello(){
         ModelAndView model = new ModelAndView();
-        model.addObject("hello", "hello world");
-        model.setViewName("hello");
+        model.setViewName("monitor");
+        return model;
+    }
+
+    @RequestMapping("/echart")
+    public ModelAndView chart(){
+        ModelAndView model = new ModelAndView("echart");
+        return model;
+
+    }
+
+    @RequestMapping("/records")
+    public ModelAndView testjs(){
+        ModelAndView model = new ModelAndView();
+        model.addObject("3");
+        model.addObject("9");
+        model.addObject("23");
+        model.addObject("28");
         return model;
     }
 }

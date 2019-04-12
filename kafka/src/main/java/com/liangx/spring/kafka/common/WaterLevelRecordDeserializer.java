@@ -14,7 +14,6 @@ public class WaterLevelRecordDeserializer implements Deserializer<WaterLevelReco
     @Override
     public WaterLevelRecord deserialize(String s, byte[] bytes) {
         return JSON.parseObject(bytes, WaterLevelRecord.class);
-//        return (WaterLevelRecord) BeanUtils.byte2Obj(bytes);
     }
 
     @Override

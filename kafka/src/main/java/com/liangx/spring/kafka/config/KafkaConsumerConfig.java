@@ -102,12 +102,12 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, WaterLevelRecord> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setBatchListener(true);     //开启批量监听
-        factory.getContainerProperties().setPollTimeout(30000);  //poll间隔时间
+        factory.getContainerProperties().setPollTimeout(30000);  //poll过期时间
         return factory;
     }
 
     //非自起监听器容器工厂，用于响应web请求
-    @Bean("responseForWebKafkaListenerContainerFactory")
+    @Bean("webKafkaListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, WaterLevelRecord> kafkaListenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, WaterLevelRecord> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
