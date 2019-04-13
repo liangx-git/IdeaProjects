@@ -31,7 +31,7 @@ public class WebKafkaConsumer implements KafkaConsumer {
     //当web提出请求调用startWebListener时才开始监听kafka消息
     @KafkaListener(id="webListener", clientIdPrefix="web", topics="${kafka.consumer.topic}", containerFactory="webKafkaListenerContainerFactory")
     public void webListener(ConsumerRecord<String, WaterLevelRecord> consumerRecord) throws IOException {
-        log.info(">>>>>>>>>>>>>>>>>>> web-listener : " + consumerRecord.toString());
+        //log.info(">>>>>>>>>>>>>>>>>>> WebListener : " + consumerRecord.toString());
 
         //准备数据
         WaterLevelRecord waterLevelRecord = consumerRecord.value();
@@ -39,7 +39,32 @@ public class WebKafkaConsumer implements KafkaConsumer {
         List<Session> userSessions = userSessionUtil.getUserSessions();
         for (Session userSession : userSessions){
             log.info(">>>>>>>>>>>>>> WebKafkaConsumer info: 给用户session(" + userSession.getId() + ")发送数据");
-            userSession.getBasicRemote().sendText(JSON.toJSONString(waterLevelRecord));
+
+            //准备数据
+            List<Object> recordForEchartMain = new ArrayList<>();   //发给echar_main数据
+            recordForEchartMain.add("main");
+            recordForEchartMain.add(waterLevelRecord);
+
+            List<Object> recordForEcharLeft = new ArrayList<>();    //发给echar_l数据
+            recordForEcharLeft.add("left");
+            recordForEcharLeft.add(waterLevelRecord);
+
+            List<Object> recordForEcharCenter = new ArrayList<>();  //发给echar_center
+            recordForEcharCenter.add("center");
+            recordForEcharCenter.add(waterLevelRecord);
+
+            List<Object> recordForEcharRight = new ArrayList<>();   //发送给echart_right
+            recordForEcharRight.add("right");
+            recordForEcharRight.add(waterLevelRecord);
+
+            //多线程环境下避免多个线程操作同一个session
+            synchronized (userSession){
+//                userSession.getBasicRemote().sendText(JSON.toJSONString(waterLevelRecord));
+                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEchartMain));
+                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharLeft));
+                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharCenter));
+                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharRight));
+            }
         }
         //更新UserSessionUtil中的预缓存队列
         userSessionUtil.updatePrepareRecords(waterLevelRecord);
@@ -69,6 +94,10 @@ public class WebKafkaConsumer implements KafkaConsumer {
         }
     }
 
+    /**
+     * 判断WebListener是否在工作
+     * @return 当WebListener为running && no pause状态时返回true
+     */
     public boolean listenerIsWorking(){
 //        log.info("**********************webKafkaConsumer.listenerIsRunning = " + registry.getListenerContainer("webListener").isRunning());
 //        log.info("**********************webKafkaConsumer.listenerIsPauseRequested = " + registry.getListenerContainer("webListener").isPauseRequested());

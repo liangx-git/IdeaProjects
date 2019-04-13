@@ -12,6 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 @RunWith(SpringRunner.class)
@@ -95,14 +96,16 @@ public class KafkaApplicationTests {
     @Test
     public void testSimulateSensorCreateMessage() throws InterruptedException {
         Random random = new Random();
+        DecimalFormat df = new DecimalFormat("0.0");
         int i = 0;
         double water_level = 50.0;
         while(true){
             double inc = (random.nextDouble()*(15 - 0)) - 7;
             water_level += (water_level + inc) > 20 ? ((water_level + inc) < 80 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
+            water_level = Double.valueOf(df.format(water_level));
             WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), i++, 104, "hohai", water_level);
             kafkaProducer.send("liangx-message", waterLevelRecord);
-            Thread.sleep(1000);
+            Thread.sleep(3000);
         }
     }
 

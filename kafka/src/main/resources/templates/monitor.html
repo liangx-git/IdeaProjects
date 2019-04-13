@@ -96,22 +96,17 @@
                 <!-- 动态图表 -->
                 <!--为ECharts准备一个具备大小（宽高）的Dom-->
                 <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
-
                 <script>
-
-                    var myChart = echarts.init(document.getElementById('main'));
-
-                    myChart.setOption({
+                    var chartMain = echarts.init(document.getElementById('main'));
+                    chartMain.setOption({
                         title: {
                             text: '水位实时监控'
                         },
                         tooltip: {},
                         legend: {
-                            data:['南京'/*, '苏州'*/]
+                            data:['南京']
                         },
                         xAxis: {
-                            // type: 'time',
-                            // splitNumber: 24,
                             data: []
                         },
                         yAxis: {
@@ -126,23 +121,18 @@
                             name: '南京',
                             type: 'line',
                             data: []
-                        }/*,{
-                            name: '苏州',
-                            type: 'line',
-                            data: []
-                        }*/]
+                        }]
                     });
 
                     var time = ["","","","","","","","","",""],
                         position1 = [0,0,0,0,0,0,0,0,0,0]
-                        // position2 = [0,0,0,0,0,0,0,0,0,0]
 
 
                     //准备好统一的 callback 函数
-                    var update_mychart = function (data) { //res是json格式的response对象
+                    var updateChartMain = function (data) { //res是json格式的response对象
 
                         // 隐藏加载动画
-                        myChart.hideLoading();
+                        chartMain.hideLoading();
 
                         // 准备数据
                         var timestamp = parseInt(data.time);  //获取时间戳
@@ -155,66 +145,30 @@
                         if (time.length >= 10){
                             time.shift();
                             position1.shift();
-                            // position2.shift();
                         }
 
                         // 填入数据
-                        myChart.setOption({
+                        chartMain.setOption({
                             xAxis: {
                                 data: time
                             },
                             series: [{
                                 name: '南京',
                                 data: position1
-                            }/*,{
-                                name: '苏州',
-                                data: position2
-                            }*/]
+                            }]
                         });
 
                     };
 
                     // 首次显示加载动画
-                    myChart.showLoading();
+                    chartMain.showLoading();
 
-
-                    //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
-                    $(document).ready(function() {
-                        namespace = '/test';
-
-                        function ws() {
-                            var socket;
-                            if (window.WebSocket) {
-                                socket = new WebSocket("ws://127.0.0.1:8080/webSocket");
-                                socket.onmessage = function (event) {
-                                    var datas = JSON.parse(event.data);
-                                    if (datas instanceof Array){    //第一次传入的是预缓存数据数组，用于填充表格
-                                        var i = 0;
-                                        for (var data in datas){
-                                            update_mychart(datas[data]);
-                                        }
-                                    }else{      //实时数据
-                                        update_mychart(datas);
-                                    }
-                                };
-                                socket.onopen = function (event) {
-                                    console.info("连接开启");
-                                };
-                                socket.onclose = function (event) {
-                                    console.info("连接被关闭");
-                                };
-                            } else {
-                                alert("你的浏览器不支持 WebSocket！");
-                            };
-
-                        }
-
-                        //开始建立WebSocket传输数据
-                        ws();
-                    });
+                    //图表自适应
+                    window.addEventListener("resize", function(){
+                        chartMain.resize();
+                    })
 
                 </script>
-
 
                 <p>
                     This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.
@@ -230,7 +184,84 @@
         </div>
     </div>
     <div class="row clearfix">
-        <div class="col-md-4 column">
+        <!-- 图表2 -->
+        <div id="left" class="col-md-4 column" style="height:300px;border:1px solid #ccc;padding:10px;">
+            <script>
+                var chartLeft = echarts.init(document.getElementById('left'));
+                chartLeft.setOption({
+                    title: {
+                        text: '水位实时监控'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['南京'/*, '苏州'*/]
+                    },
+                    xAxis: {
+                        // type: 'time',
+                        // splitNumber: 24,
+                        data: []
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: 100,
+                        min: 0,
+                        axisLabel:{
+                            formatter: '{value} m'
+                        }
+                    },
+                    series: [{
+                        name: '南京',
+                        type: 'line',
+                        data: []
+                    }]
+                });
+
+                var time = ["","","","","","","","","",""],
+                    position1 = [0,0,0,0,0,0,0,0,0,0]
+
+
+                //准备好统一的 callback 函数
+                var updateChartLeft = function (data) { //res是json格式的response对象
+
+                    // 隐藏加载动画
+                    chartLeft.hideLoading();
+
+                    // 准备数据
+                    var timestamp = parseInt(data.time);  //获取时间戳
+                    var date = new Date(timestamp);     //将时间戳转为Date
+                    var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                    var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
+                    time.push(hhmmss);
+                    position1.push(waterLevel);
+
+                    if (time.length >= 10){
+                        time.shift();
+                        position1.shift();
+                    }
+
+                    // 填入数据
+                    chartLeft.setOption({
+                        xAxis: {
+                            data: time
+                        },
+                        series: [{
+                            name: '南京',
+                            data: position1
+                        }]
+                    });
+
+                };
+
+                // 首次显示加载动画
+                chartLeft.showLoading();
+
+                //图表自适应
+                window.addEventListener("resize", function(){
+                    chartLeft.resize();
+                })
+
+            </script>
+
             <h2>
                 Heading
             </h2>
@@ -241,7 +272,84 @@
                 <a class="btn" href="#">View details »</a>
             </p>
         </div>
-        <div class="col-md-4 column">
+
+        <!-- 图表3-->
+        <div id="center" class="col-md-4 column" style="height:300px;border:1px solid #ccc;padding:10px;">
+            <script>
+                var chartCenter = echarts.init(document.getElementById('center'));
+
+                chartCenter.setOption({
+                    title: {
+                        text: '水位实时监控'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['南京'/*, '苏州'*/]
+                    },
+                    xAxis: {
+                        // type: 'time',
+                        // splitNumber: 24,
+                        data: []
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: 100,
+                        min: 0,
+                        axisLabel:{
+                            formatter: '{value} m'
+                        }
+                    },
+                    series: [{
+                        name: '南京',
+                        type: 'line',
+                        data: []
+                    }]
+                });
+
+                var time = ["","","","","","","","","",""],
+                    position1 = [0,0,0,0,0,0,0,0,0,0]
+
+                //准备好统一的 callback 函数
+                var updateChartCenter= function (data) { //res是json格式的response对象
+
+                    // 隐藏加载动画
+                    chartCenter.hideLoading();
+
+                    // 准备数据
+                    var timestamp = parseInt(data.time);  //获取时间戳
+                    var date = new Date(timestamp);     //将时间戳转为Date
+                    var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                    var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
+                    time.push(hhmmss);
+                    position1.push(waterLevel);
+
+                    if (time.length >= 10){
+                        time.shift();
+                        position1.shift();
+                    }
+
+                    // 填入数据
+                    chartCenter.setOption({
+                        xAxis: {
+                            data: time
+                        },
+                        series: [{
+                            name: '南京',
+                            data: position1
+                        }]
+                    });
+                };
+
+                // 首次显示加载动画
+                chartCenter.showLoading();
+
+                //图表自适应
+                window.addEventListener("resize", function(){
+                    chartCenter.resize();
+                })
+
+            </script>
+
             <h2>
                 Heading
             </h2>
@@ -252,7 +360,141 @@
                 <a class="btn" href="#">View details »</a>
             </p>
         </div>
-        <div class="col-md-4 column">
+        <!-- 图表4-->
+        <div id="right" class="col-md-4 column" style="height:300px;border:1px solid #ccc;padding:10px;">
+            <script>
+                var chartRight= echarts.init(document.getElementById('right'));
+
+                chartRight.setOption({
+                    title: {
+                        text: '水位实时监控'
+                    },
+                    tooltip: {},
+                    legend: {
+                        data:['南京'/*, '苏州'*/]
+                    },
+                    xAxis: {
+                        // type: 'time',
+                        // splitNumber: 24,
+                        data: []
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: 100,
+                        min: 0,
+                        axisLabel:{
+                            formatter: '{value} m'
+                        }
+                    },
+                    series: [{
+                        name: '南京',
+                        type: 'line',
+                        data: []
+                    }]
+                });
+
+                var time = ["","","","","","","","","",""],
+                    position1 = [0,0,0,0,0,0,0,0,0,0]
+
+                //准备好统一的 callback 函数
+                var updateChartRight= function (data) { //res是json格式的response对象
+
+                    // 隐藏加载动画
+                    chartRight.hideLoading();
+
+                    // 准备数据
+                    var timestamp = parseInt(data.time);  //获取时间戳
+                    var date = new Date(timestamp);     //将时间戳转为Date
+                    var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                    var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
+                    time.push(hhmmss);
+                    position1.push(waterLevel);
+
+                    if (time.length >= 10){
+                        time.shift();
+                        position1.shift();
+                    }
+
+                    // 填入数据
+                    chartRight.setOption({
+                        xAxis: {
+                            data: time
+                        },
+                        series: [{
+                            name: '南京',
+                            data: position1
+                        }]
+                    });
+
+                };
+
+                // 首次显示加载动画
+                chartRight.showLoading();
+
+                //图表自适应
+                window.addEventListener("resize", function(){
+                    chartRight.resize();
+                })
+
+
+                //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
+                $(document).ready(function() {
+                    namespace = '/test';
+
+                    function ws() {
+                        var socket;
+                        if (window.WebSocket) {
+                            // socket = new WebSocket("ws://127.0.0.1:8080/webSocket");
+                            socket = new WebSocket("ws://192.168.42.183:8080/webSocket");
+                            socket.onmessage = function (event) {
+                                var datas = JSON.parse(event.data);
+                                if (datas[0] == "main"){
+                                    // alert("main");
+                                    updateChartMain(datas[1]);
+
+                                }else if(datas[0] == "left"){
+                                    // alert("left");
+                                    updateChartLeft(datas[1]);
+
+                                }else if(datas[0] == "center"){
+                                    // alert("center");
+                                    updateChartCenter(datas[1]);
+                                }else if(datas[0] == "right"){
+                                    // alert("right");
+                                    updateChartRight(datas[1]);
+
+                                }else{
+                                    alert("error");
+                                }
+
+
+                                // if (datas instanceof Array){    //第一次传入的是预缓存数据数组，用于填充表格
+                                //     var i = 0;
+                                //     for (var data in datas){
+                                //         update_mychart(datas[data]);
+                                //     }
+                                // }else{      //实时数据
+                                //     update_mychart(datas);
+                                // }
+                            };
+                            socket.onopen = function (event) {
+                                console.info("连接开启");
+                            };
+                            socket.onclose = function (event) {
+                                console.info("连接被关闭");
+                            };
+                        } else {
+                            alert("你的浏览器不支持 WebSocket！");
+                        };
+
+                    }
+
+                    //开始建立WebSocket传输数据
+                    ws();
+                });
+
+            </script>
+
             <h2>
                 Heading
             </h2>
