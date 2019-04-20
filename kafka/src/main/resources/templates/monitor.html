@@ -4,17 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link href="//cdn.staticfile.org/twitter-bootstrap/3.0.1/css/bootstrap.min.css" rel="stylesheet">
-    <link href="v3/layoutit.css" rel="stylesheet">
-    <script src="https://img.highcharts.com.cn/jquery/jquery-1.8.3.min.js"></script>
-    <script src="https://img.highcharts.com.cn/highcharts/highcharts.js"></script>
-    <script src="https://img.highcharts.com.cn/highcharts/modules/exporting.js"></script>
-    <script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
-    <script src="http://echarts.baidu.com/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap/4.0.0/bootstrap.min.css">
+    <link href="/css/bootstrap/3.0.1/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/v3/layoutit.css" rel="stylesheet">
+    <!--<script src="/js/jquery-1.8.3.min.js"></script>-->
+    <script src="/js/jquery-2.1.4.min.js"></script>
+    <script src="/js/echarts.min.js"></script>
+    <script src="/js/highchart.js"></script>
+    <!--<script src="https://code.highcharts.com.cn/highcharts/highcharts.js" ></script>-->
+    <!--<script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>-->
+    <!--<script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>-->
 </head>
 <body>
-
 <div class="container">
     <div class="row clearfix">
         <div class="col-md-12 column">
@@ -89,43 +90,186 @@
 
             </nav>
 
-
-
             <div class="jumbotron">
 
-                <!-- 动态图表 -->
+                <div id="test" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
+                <script>
+                    var chartTest = Highcharts.chart('test', {
+                        chart: {
+                            type: 'spline'
+                        },
+                        title: {
+                            text: '实时监控'
+                        },
+                        credits: {
+                            enabled: false
+                        },
+                        xAxis: {
+                            type: 'datetime',
+                            data: ["","","","","","","","","",""]
+                        },
+                        yAxis: {
+                            title: {
+                                text: 'm'
+                            },
+                            min: 20,
+                            max: 100,
+                            plotBands: [{ // Light air
+                                from: 80,
+                                to: 90,
+                                color: 'rgba(255, 185, 15, 0.1)',
+                                label: {
+                                    text: '预警水位',
+                                    style: {
+                                        color: '#8B8989'
+                                    }
+                                }
+                            }, { // Light air
+                                    from: 90,
+                                    to: 100,
+                                    color: 'rgba(255, 69, 0, 0.1)',
+                                    label: {
+                                        text: '危险水位',
+                                        style: {
+                                            color: '#8B8989'
+                                        }
+                                    }
+                            }]
+                        },
+                        tooltip: {
+                            valueSuffix: ' m'
+                        },
+                        // plotOptions: {
+                        //     spline: {
+                        //         lineWidth: 4,
+                        //         states: {
+                        //             hover: {
+                        //                 lineWidth: 5
+                        //             }
+                        //         },
+                        //         marker: {
+                        //             enabled: false
+                        //         },
+                        //         pointInterval: 3600000, // one hour
+                        //         pointStart: Date.UTC(2009, 9, 6, 0, 0, 0)
+                        //     }
+                        // },
+                        series: [{
+                            name: 'HoHai',
+                            data: [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4]
+                        }]
+                        // ,
+                        // navigation: {
+                        //     menuItemStyle: {
+                        //         fontSize: '10px'
+                        //     }
+                        // }
+                    });
+
+                    // var testTime = ["","","","","","","","","",""],
+                        // testPosition = [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4];
+                        // testPosition = [0,0,0,0,0,0,0,0,0,0];
+
+                    var updateChartTest = function (data){
+
+                        // chartTest.hideLoading();
+
+                        // 准备数据
+                        var timestamp = parseInt(data.time);  //获取时间戳
+                        var date = new Date(timestamp);     //将时间戳转为Date
+                        var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                        // var hhmmss = Date.UTC(timestamp);
+                        var waterLevel = parseFloat(data.waterLevel);
+
+
+                        // var location = data.siteName;
+
+                        // testTime.push(hhmmss);
+                        // testPosition.push(waterLevel);
+                        //
+                        // if (testTime.length >= 10){
+                        //     testTime.shift();
+                        //     testPosition.shift();
+                        // }
+
+                        // console.log("testTime = " + testTime + "testPosition = " + testPosition);
+                        // chartTest.addSeries(hhmmss, waterLevel);
+                        // 更新数据
+                        console.log("hhmmss = " + hhmmss + " waterLevel = " + waterLevel);
+                        // var xDAta = chartTest.xAxis.data;
+                        chartTest.series[0].addPoint([hhmmss, waterLevel], true, true);
+
+
+                        // chartTest.update({
+                        //     series: {
+                        //         data: testPosition
+                        //     },
+                        //     xAxis: {
+                        //         data: testTime
+                        //     }
+                        // })
+                        // chartTest.series[0].addPoint([hhmmss, waterLevel], true, true, true);
+                        // chartTest.update({
+                            // legend: {
+                            //     data: [location]
+                            // },
+                            // xAxis: {
+                            //     data: testTime
+                            // },
+                            // series: [{
+                            //     name: location,
+                            //     data: testPosition
+                            // }]
+                        // });
+
+                        // console.log("update series" + testPosition);
+                        // chartTest.series[0].update({
+                        //     data: testPosition
+                        // })
+
+                    }
+
+                </script>
+
+
+
+                <!-- 实时监控 -->
                 <!--为ECharts准备一个具备大小（宽高）的Dom-->
                 <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
                 <script>
                     var chartMain = echarts.init(document.getElementById('main'));
                     chartMain.setOption({
                         title: {
-                            text: '水位实时监控'
+                            text: '实时监控'
                         },
                         tooltip: {},
                         legend: {
-                            data:['南京']
+                            data: ' '
                         },
                         xAxis: {
+                            name: '时间',
+                            show: true,
                             data: []
                         },
                         yAxis: {
+                            name: 'm',
+                            show: true,
                             type: 'value',
                             max: 100,
-                            min: 0,
-                            axisLabel:{
-                                formatter: '{value} m'
-                            }
+                            min: 0
+                            // axisLabel:{
+                            //     formatter: '{value} m'
+                            // }
                         },
                         series: [{
-                            name: '南京',
+                            name: ' ',
                             type: 'line',
                             data: []
                         }]
                     });
 
-                    var time = ["","","","","","","","","",""],
-                        position1 = [0,0,0,0,0,0,0,0,0,0]
+                    var mainTime = ["","","","","","","","","",""],
+                        mainPosition = [0,0,0,0,0,0,0,0,0,0];
 
 
                     //准备好统一的 callback 函数
@@ -139,22 +283,27 @@
                         var date = new Date(timestamp);     //将时间戳转为Date
                         var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
                         var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
-                        time.push(hhmmss);
-                        position1.push(waterLevel);
+                        var location = data.siteName;
 
-                        if (time.length >= 10){
-                            time.shift();
-                            position1.shift();
+                        mainTime.push(hhmmss);
+                        mainPosition.push(waterLevel);
+
+                        if (mainTime.length >= 10){
+                            mainTime.shift();
+                            mainPosition.shift();
                         }
 
                         // 填入数据
                         chartMain.setOption({
+                            legend: {
+                                data: [location]
+                            },
                             xAxis: {
-                                data: time
+                                data: mainTime
                             },
                             series: [{
-                                name: '南京',
-                                data: position1
+                                name: [location],
+                                data: mainPosition
                             }]
                         });
 
@@ -170,11 +319,11 @@
 
                 </script>
 
+                <!--<p>-->
+                    <!--This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.-->
+                <!--</p>-->
                 <p>
-                    This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.
-                </p>
-                <p>
-                    <a class="btn btn-primary btn-large" href="#">Learn more</a>
+                    <a class="btn btn-primary btn-large" onclick="back()">回溯</a>
                 </p>
             </div>
             <div class="progress progress-striped active">
@@ -190,34 +339,37 @@
                 var chartLeft = echarts.init(document.getElementById('left'));
                 chartLeft.setOption({
                     title: {
-                        text: '水位实时监控'
+                        text: '日监控'
                     },
                     tooltip: {},
                     legend: {
-                        data:['南京'/*, '苏州'*/]
+                        // data:[''/*, '苏州'*/]
                     },
                     xAxis: {
-                        // type: 'time',
-                        // splitNumber: 24,
+                        title: {
+                          text: '小时'
+                        },
                         data: []
                     },
                     yAxis: {
+                        name: 'm',
+                        show: true,
                         type: 'value',
                         max: 100,
-                        min: 0,
-                        axisLabel:{
-                            formatter: '{value} m'
-                        }
+                        min: 0
+                        // axisLabel:{
+                        //     formatter: '{value} m'
+                        // }
                     },
                     series: [{
-                        name: '南京',
+                        // name: '',
                         type: 'line',
                         data: []
                     }]
                 });
 
-                var time = ["","","","","","","","","",""],
-                    position1 = [0,0,0,0,0,0,0,0,0,0]
+                var leftTime = ["","","","","","","","","","","",""],
+                    leftPosition = [0,0,0,0,0,0,0,0,0,0,0,0];
 
 
                 //准备好统一的 callback 函数
@@ -229,24 +381,32 @@
                     // 准备数据
                     var timestamp = parseInt(data.time);  //获取时间戳
                     var date = new Date(timestamp);     //将时间戳转为Date
-                    var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                    var hh = date.getHours();
                     var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
-                    time.push(hhmmss);
-                    position1.push(waterLevel);
+                    var location = data.siteName;
 
-                    if (time.length >= 10){
-                        time.shift();
-                        position1.shift();
+                    leftTime.push(hh);
+                    leftPosition.push(waterLevel);
+                    // console.log("date = " + date + " leftEchart : waterLevel = " + waterLevel);
+
+
+                    if (leftTime.length >= 12){
+                        leftTime.shift();
+                        leftPosition.shift();
                     }
 
                     // 填入数据
                     chartLeft.setOption({
+                        legend:{
+                            data: [location]
+                        },
                         xAxis: {
-                            data: time
+                            data: leftTime
                         },
                         series: [{
-                            name: '南京',
-                            data: position1
+                            // name: '南京',
+                            name: [location],
+                            data: leftPosition
                         }]
                     });
 
@@ -262,12 +422,12 @@
 
             </script>
 
-            <h2>
-                Heading
-            </h2>
-            <p>
-                Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-            </p>
+            <!--<h2>-->
+                <!--Heading-->
+            <!--</h2>-->
+            <!--<p>-->
+                <!--Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.-->
+            <!--</p>-->
             <p>
                 <a class="btn" href="#">View details »</a>
             </p>
@@ -280,7 +440,7 @@
 
                 chartCenter.setOption({
                     title: {
-                        text: '水位实时监控'
+                        text: '周监控'
                     },
                     tooltip: {},
                     legend: {
@@ -306,8 +466,8 @@
                     }]
                 });
 
-                var time = ["","","","","","","","","",""],
-                    position1 = [0,0,0,0,0,0,0,0,0,0]
+                var centerTime = ["","","","","","",""],
+                    centerPosition = [0,0,0,0,0,0,0];
 
                 //准备好统一的 callback 函数
                 var updateChartCenter= function (data) { //res是json格式的response对象
@@ -318,24 +478,29 @@
                     // 准备数据
                     var timestamp = parseInt(data.time);  //获取时间戳
                     var date = new Date(timestamp);     //将时间戳转为Date
-                    var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                    var hhmmss = date.getDay();
                     var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
-                    time.push(hhmmss);
-                    position1.push(waterLevel);
+                    var location = data.siteName;
 
-                    if (time.length >= 10){
-                        time.shift();
-                        position1.shift();
+                    centerTime.push(hhmmss);
+                    centerPosition.push(waterLevel);
+
+                    if (centerTime.length >= 7){
+                        centerTime.shift();
+                        centerPosition.shift();
                     }
 
                     // 填入数据
                     chartCenter.setOption({
+                        legend: {
+                            data: [location]
+                        },
                         xAxis: {
-                            data: time
+                            data: centerTime
                         },
                         series: [{
-                            name: '南京',
-                            data: position1
+                            name: [location],
+                            data: centerPosition
                         }]
                     });
                 };
@@ -350,32 +515,31 @@
 
             </script>
 
-            <h2>
-                Heading
-            </h2>
-            <p>
-                Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-            </p>
+            <!--<h2>-->
+                <!--Heading-->
+            <!--</h2>-->
+            <!--<p>-->
+                <!--Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.-->
+            <!--</p>-->
             <p>
                 <a class="btn" href="#">View details »</a>
             </p>
         </div>
         <!-- 图表4-->
         <div id="right" class="col-md-4 column" style="height:300px;border:1px solid #ccc;padding:10px;">
+
             <script>
                 var chartRight= echarts.init(document.getElementById('right'));
 
                 chartRight.setOption({
                     title: {
-                        text: '水位实时监控'
+                        text: '月监控'
                     },
                     tooltip: {},
                     legend: {
                         data:['南京'/*, '苏州'*/]
                     },
                     xAxis: {
-                        // type: 'time',
-                        // splitNumber: 24,
                         data: []
                     },
                     yAxis: {
@@ -393,8 +557,8 @@
                     }]
                 });
 
-                var time = ["","","","","","","","","",""],
-                    position1 = [0,0,0,0,0,0,0,0,0,0]
+                var rightTime = ["","","","","","","","","",""],
+                    rightPosition = [0,0,0,0,0,0,0,0,0,0];
 
                 //准备好统一的 callback 函数
                 var updateChartRight= function (data) { //res是json格式的response对象
@@ -407,22 +571,25 @@
                     var date = new Date(timestamp);     //将时间戳转为Date
                     var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
                     var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
-                    time.push(hhmmss);
-                    position1.push(waterLevel);
+                    rightTime.push(hhmmss);
+                    rightPosition.push(waterLevel);
 
-                    if (time.length >= 10){
-                        time.shift();
-                        position1.shift();
+                    if (rightTime.length >= 10){
+                        rightTime.shift();
+                        rightPosition.shift();
                     }
 
                     // 填入数据
                     chartRight.setOption({
+                        legend: {
+                            data: [location]
+                        },
                         xAxis: {
-                            data: time
+                            data: rightTime
                         },
                         series: [{
                             name: '南京',
-                            data: position1
+                            data: rightPosition
                         }]
                     });
 
@@ -435,76 +602,112 @@
                 window.addEventListener("resize", function(){
                     chartRight.resize();
                 })
-
-
-                //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
-                $(document).ready(function() {
-                    namespace = '/test';
-
-                    function ws() {
-                        var socket;
-                        if (window.WebSocket) {
-                            // socket = new WebSocket("ws://127.0.0.1:8080/webSocket");
-                            socket = new WebSocket("ws://192.168.42.183:8080/webSocket");
-                            socket.onmessage = function (event) {
-                                var datas = JSON.parse(event.data);
-                                if (datas[0] == "main"){
-                                    // alert("main");
-                                    updateChartMain(datas[1]);
-
-                                }else if(datas[0] == "left"){
-                                    // alert("left");
-                                    updateChartLeft(datas[1]);
-
-                                }else if(datas[0] == "center"){
-                                    // alert("center");
-                                    updateChartCenter(datas[1]);
-                                }else if(datas[0] == "right"){
-                                    // alert("right");
-                                    updateChartRight(datas[1]);
-
-                                }else{
-                                    alert("error");
-                                }
-
-
-                                // if (datas instanceof Array){    //第一次传入的是预缓存数据数组，用于填充表格
-                                //     var i = 0;
-                                //     for (var data in datas){
-                                //         update_mychart(datas[data]);
-                                //     }
-                                // }else{      //实时数据
-                                //     update_mychart(datas);
-                                // }
-                            };
-                            socket.onopen = function (event) {
-                                console.info("连接开启");
-                            };
-                            socket.onclose = function (event) {
-                                console.info("连接被关闭");
-                            };
-                        } else {
-                            alert("你的浏览器不支持 WebSocket！");
-                        };
-
-                    }
-
-                    //开始建立WebSocket传输数据
-                    ws();
-                });
-
             </script>
 
-            <h2>
-                Heading
-            </h2>
-            <p>
-                Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-            </p>
+
+
+            <!--<h2>-->
+                <!--Heading-->
+            <!--</h2>-->
+            <!--<p>-->
+                <!--Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.-->
+            <!--</p>-->
             <p>
                 <a class="btn" href="#">View details »</a>
             </p>
         </div>
+
+        <!-- WebSocket -->
+        <script>
+            var back = function(){
+                // var date = new Date();
+                // var timeStamp = date.getTime();
+                // console.info("date.getTime() = " + timeStamp);
+                // var data = new Array();
+                // data.push("back");
+                // data.push(timeStamp);
+                // var dataJsonString = JSON.stringify(data);
+                socket.send("back");
+            };
+
+            //定义socket连接
+            var socket;
+            function ws() {
+                if (window.WebSocket) {
+                    socket = new WebSocket("ws://localhost:8080/webSocket");
+                    // socket = new WebSocket("ws://192.168.42.183:8080/webSocket");
+                    socket.onmessage = function (event) {
+                        var datas = JSON.parse(event.data);
+                        if (datas[0] == "REAL"){
+                            // alert("main");
+                            if (datas[1] instanceof Array){
+                                for (var i in datas[1]){
+                                    updateChartMain(datas[1][i]);
+                                    updateChartTest(datas[1][i]);
+                                }
+                            }else{
+                                updateChartMain(datas[1]);
+                                updateChartTest(datas[1]);
+                            }
+
+                        }else if(datas[0] == "HOURLY"){
+                            // alert("left");
+                            if (datas[1] instanceof Array){
+                                // console.info("datas[1] is Array");
+                                for (var i in datas[1]){
+                                    // alert("datas[1][" + i + "] = " + datas[1][i]);
+                                    updateChartLeft(datas[1][i]);
+                                }
+                            }else{
+                                updateChartLeft(datas[1]);
+                            }
+
+                        }else if(datas[0] == "WEEKLY"){
+                            // alert("center");
+                            if (datas[1] instanceof Array) {
+                                for (var i in datas[1]) {
+                                    updateChartCenter(datas[1][i]);
+                                }
+                            }else{
+                                    updateChartCenter(datas[1]);
+                            }
+                        }else if(datas[0] == "MONTHLY"){
+                            // alert("right");
+                            if (datas[1] instanceof Array){
+                                for (var i in datas[1]){
+                                    updateChartRight(datas[1][i]);
+                                }
+                            }else{
+                                updateChartRight(datas[1]);
+                            }
+
+                        }else{
+                            alert("error");
+                        }
+
+                    };
+                    socket.onopen = function (event) {
+                        console.info("连接开启");
+                    };
+                    socket.onclose = function (event) {
+                        console.info("连接被关闭");
+                    };
+                } else {
+                    alert("你的浏览器不支持 WebSocket！");
+                }
+
+            }
+
+            //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
+            $(document).ready(function() {
+                namespace = '/test';
+
+                //开始建立WebSocket传输数据
+                ws();
+            });
+
+        </script>
+
     </div>
 </div>
 </body>

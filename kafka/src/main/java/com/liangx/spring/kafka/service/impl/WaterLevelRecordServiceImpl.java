@@ -7,6 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Service
@@ -27,6 +28,12 @@ public class WaterLevelRecordServiceImpl implements WaterLevelRecordService {
         waterLevelRecordMapper.insertRecords(records);
     }
 
+
+    @Override
+    public double getAvgWaterLevelByInterval(Timestamp beginTime, Timestamp endTime) {
+        WaterLevelRecordMapper waterLevelRecordMapper = sqlSession.getMapper(WaterLevelRecordMapper.class);
+        return waterLevelRecordMapper.getAvgWaterLevelByInterval(beginTime, endTime);
+    }
 
     @Override
     public WaterLevelRecord queryById(Integer id) {

@@ -3,16 +3,26 @@ package com.liangx.spring.kafka.consumer.Impl;
 import com.alibaba.fastjson.JSON;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.consumer.KafkaConsumer;
+import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.utils.UserSessionUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.PartitionOffset;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.Session;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.*;
 
 @Component
@@ -26,49 +36,71 @@ public class WebKafkaConsumer implements KafkaConsumer {
     @Autowired
     private UserSessionUtil userSessionUtil;
 
+    @Autowired
+    private PreparedBufferUtil preparedBufferUtil;
+
+    public boolean isBack = false;
+
     private int i = 0;
+
+    private int partition;
+
+    private Long offset;
+
+    @Autowired
+    private KafkaListenerContainerFactory kafkaListenerContainerFactory;
+
 
     //当web提出请求调用startWebListener时才开始监听kafka消息
     @KafkaListener(id="webListener", clientIdPrefix="web", topics="${kafka.consumer.topic}", containerFactory="webKafkaListenerContainerFactory")
-    public void webListener(ConsumerRecord<String, WaterLevelRecord> consumerRecord) throws IOException {
-        //log.info(">>>>>>>>>>>>>>>>>>> WebListener : " + consumerRecord.toString());
+    public void webListener(ConsumerRecord<String, WaterLevelRecord> consumerRecord/*, Acknowledgment ack*/, Consumer consumer) throws IOException {
+        log.info(">>>>>>>>>>>>>>>>>>>>Consumer = " + consumer + ", partition = " + consumerRecord.partition() + ", offset = " + consumerRecord.offset() + "<<<<<<<<<<<<<<<<<<<<<<<<");
 
+        Thread thread = Thread.currentThread();
+        log.info(">>>>>>>>>>>>>>>>>>>> currentThread : " + thread.getName() + "ThreadGroup : " + thread.getThreadGroup().getName() + "<<<<<<<<<<<<<<<<");
         //准备数据
         WaterLevelRecord waterLevelRecord = consumerRecord.value();
+        //发给echar_main数据
+        List<Object> recordForEchartMain = new ArrayList<>();
+        recordForEchartMain.add("REAL");
+        recordForEchartMain.add(waterLevelRecord);
+
         //通过session实现向客户端推送数据，当存在多个用户时逐个发送
         List<Session> userSessions = userSessionUtil.getUserSessions();
         for (Session userSession : userSessions){
-            log.info(">>>>>>>>>>>>>> WebKafkaConsumer info: 给用户session(" + userSession.getId() + ")发送数据");
-
-            //准备数据
-            List<Object> recordForEchartMain = new ArrayList<>();   //发给echar_main数据
-            recordForEchartMain.add("main");
-            recordForEchartMain.add(waterLevelRecord);
-
-            List<Object> recordForEcharLeft = new ArrayList<>();    //发给echar_l数据
-            recordForEcharLeft.add("left");
-            recordForEcharLeft.add(waterLevelRecord);
-
-            List<Object> recordForEcharCenter = new ArrayList<>();  //发给echar_center
-            recordForEcharCenter.add("center");
-            recordForEcharCenter.add(waterLevelRecord);
-
-            List<Object> recordForEcharRight = new ArrayList<>();   //发送给echart_right
-            recordForEcharRight.add("right");
-            recordForEcharRight.add(waterLevelRecord);
+            log.info(">>>>>>>>>>>>>> WebKafkaConsumer info: 给用户session(" + userSession.getId() + ")发送数据 <<<<<<<<<<<<<<<<<<<");
 
             //多线程环境下避免多个线程操作同一个session
             synchronized (userSession){
-//                userSession.getBasicRemote().sendText(JSON.toJSONString(waterLevelRecord));
                 userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEchartMain));
-                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharLeft));
-                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharCenter));
-                userSession.getBasicRemote().sendText(JSON.toJSONString(recordForEcharRight));
             }
         }
         //更新UserSessionUtil中的预缓存队列
-        userSessionUtil.updatePrepareRecords(waterLevelRecord);
+        preparedBufferUtil.updateRealBuffer(waterLevelRecord);
+
+        //提交offset
+//        ack.acknowledge();
+
+//        if (isBack){
+//            log.info(">>>>>>>>>>>>>>>>>>>> WebKafkaConsumer info: 开始回溯 <<<<<<<<<<<<<<<<<<<<");
+
+//            Map<TopicPartition, Long> topicPartitionLongMap = new HashMap<>();
+//            TopicPartition topicPartition = new TopicPartition("liangx-message", consumerRecord.partition());
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.add(Calendar.MINUTE, -3);
+//            topicPartitionLongMap.put(topicPartition, calendar.getTimeInMillis());
+//            Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes = consumer.offsetsForTimes(topicPartitionLongMap);
+//            for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry : offsetsForTimes.entrySet()){
+//                log.info(">>>>>>>>>>>>>>> timestamp = " + entry.getValue().timestamp() + " offset = " + entry.getValue().offset());
+//                consumer.seek(new TopicPartition("liangx-message", consumerRecord.partition()), entry.getValue().offset());
+//            }
+//            consumer.seek(new TopicPartition("liangx-message", consumerRecord.partition()), 0);
+//            isBack = false;
+//        }
     }
+
+
+
 
     /**
      * 开启webListener监听kafka消息

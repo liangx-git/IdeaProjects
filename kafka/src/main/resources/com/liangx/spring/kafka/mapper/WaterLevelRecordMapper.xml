@@ -14,7 +14,9 @@
     <!-- 批量插入 -->
     <insert id="insertRecord" parameterType="com.liangx.spring.kafka.common.WaterLevelRecord" keyProperty="time">
         INSERT INTO waterlevel_information(time, id, site_id, site_name, water_level)
+        <if test="time != null and id != null and siteId != null and siteName != null and waterLevel != null">
           VALUES(#{time}, #{id}, #{siteId}, #{siteName}, #{waterLevel})
+        </if>
     </insert>
 
     <!--单条记录插入 -->
@@ -36,6 +38,14 @@
     <!--根据id Select-->
     <select id="queryById" parameterType="java.lang.Integer" resultMap="waterlevelRecordResult">
         SELECT* FROM waterlevel_information WHERE id = #{id}
+    </select>
+
+    <!-- 查询时间在beginTime到endTime之间的数据，COALESCE（）表示当查询结果为null时返回0 -->
+    <select id="getAvgWaterLevelByInterval" parameterType="java.sql.Timestamp" resultType="java.lang.Double">
+        SELECT COALESCE(AVG(water_level), 0) FROM waterlevel_information WHERE
+        <if test="beginTime != null and endTime != null">
+          time >= #{beginTime} AND time  &lt; #{endTime}
+        </if>
     </select>
 
 </mapper>

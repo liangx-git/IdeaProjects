@@ -1,23 +1,24 @@
 package com.liangx.spring.kafka.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
-import com.liangx.spring.kafka.config.WebSocketConfig;
 import com.liangx.spring.kafka.consumer.Impl.WebKafkaConsumer;
 import com.liangx.spring.kafka.utils.ApplicationContextUtil;
+import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.utils.UserSessionUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.server.standard.SpringConfigurator;
 
 import javax.websocket.*;
-import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.CopyOnWriteArrayList;
+
+import static com.alibaba.fastjson.JSON.parseArray;
 
 @ServerEndpoint(value = "/webSocket")
 @Component
@@ -35,9 +36,37 @@ public class WebSocketServer {
         UserSessionUtil userSessionUtil = getUserSessionUtil();
         userSessionUtil.addUserSession(session);
         //当缓存队列可用时，推送给新建立连接用户
-        Queue<WaterLevelRecord> prepareBufferRecords = userSessionUtil.getPrepareRecords();
-        if (!prepareBufferRecords.isEmpty()){
-            session.getBasicRemote().sendText(JSON.toJSONString(prepareBufferRecords));
+        //real表格buffer
+        Queue<WaterLevelRecord> realBuffer = getPreparedBufferUtil().getRealBuffer();
+        if (!realBuffer.isEmpty()){
+            log.info(">>>>>>>>>>>>>>>>> webSocket info: onOpen() 发送real表格buffer <<<<<<<<<<<<<<<<<<<<");
+            List<Object> msg = new ArrayList<>();
+            msg.add("REAL");
+            msg.add(realBuffer);
+            session.getBasicRemote().sendText(JSON.toJSONString(msg));
+        }
+        //hourly表格buffer
+        List<WaterLevelRecord>  hourlyBuffer = getPreparedBufferUtil().getHourlyBuffer();
+        if (!hourlyBuffer.isEmpty()){
+            log.info(">>>>>>>>>>>>>>>>> webSocket info: onOpen() 发送hourly表格buffer : " + hourlyBuffer + " <<<<<<<<<<<<<<<<<<<<");
+            List<Object> msg = new ArrayList<>();
+            msg.add("HOURLY");
+            msg.add(hourlyBuffer);
+            synchronized (session){
+                session.getBasicRemote().sendText(JSON.toJSONString(msg));
+            }
+        }
+
+        //weekly表格buffer
+        List<WaterLevelRecord>  weeklyBuffer = getPreparedBufferUtil().getWeeklyBuffer();
+        if (!hourlyBuffer.isEmpty()){
+            log.info(">>>>>>>>>>>>>>>>> webSocket info: onOpen() 发送weekly表格buffer : " + weeklyBuffer + " <<<<<<<<<<<<<<<<<<<<");
+            List<Object> msg = new ArrayList<>();
+            msg.add("WEEKLY");
+            msg.add(weeklyBuffer);
+            synchronized (session){
+                session.getBasicRemote().sendText(JSON.toJSONString(msg));
+            }
         }
 
         //当WebListener未开启时开启或者开启了暂停时恢复
@@ -73,7 +102,11 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMessage(String message, Session session){
-        log.info(">>>>>>>>>>>>>>>>>>>> webSocket info: onMessage() 收到Session(" + session.getId() + "消息 <<<<<<<<<<<<<<<<<<<<<");
+        if (message.equals("back")){
+            log.info(">>>>>>>>>>>>>> message = " + message + " <<<<<<<<<<<<<<<<<");
+            getWebKafkaConsumer().isBack = true;
+        }
+
     }
 
     /**
@@ -95,7 +128,12 @@ public class WebSocketServer {
     private UserSessionUtil getUserSessionUtil(){
         return (UserSessionUtil)ApplicationContextUtil.getApplicationContext().getBean("userSessionUtil");
     }
+
     private WebKafkaConsumer getWebKafkaConsumer(){
         return (WebKafkaConsumer)ApplicationContextUtil.getApplicationContext().getBean("webKafkaConsumer");
+    }
+
+    private PreparedBufferUtil getPreparedBufferUtil(){
+        return (PreparedBufferUtil)ApplicationContextUtil.getApplicationContext().getBean("preparedBufferUtil");
     }
 }

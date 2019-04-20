@@ -13,6 +13,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 @RunWith(SpringRunner.class)
@@ -43,7 +45,7 @@ public class KafkaApplicationTests {
 //    }
 //
 ////    @Test
-////    public void testCreateTopic() throws InterruptedException {
+////    public void testCreateTopic() throews InterruptedException {
 ////        NewTopic topic = new NewTopic("topic-by-coding", 1, (short)1);
 ////        adminClient.createTopics(Arrays.asList(topic));
 ////        Thread.sleep(1000);
@@ -101,11 +103,11 @@ public class KafkaApplicationTests {
         double water_level = 50.0;
         while(true){
             double inc = (random.nextDouble()*(15 - 0)) - 7;
-            water_level += (water_level + inc) > 20 ? ((water_level + inc) < 80 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
+            water_level += (water_level + inc) > 20 ? ((water_level + inc) < 100 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
             water_level = Double.valueOf(df.format(water_level));
             WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), i++, 104, "hohai", water_level);
             kafkaProducer.send("liangx-message", waterLevelRecord);
-            Thread.sleep(3000);
+            Thread.sleep(6000);
         }
     }
 
@@ -118,6 +120,19 @@ public class KafkaApplicationTests {
         System.out.println(waterlevelRecord.toString());
     }
 
+    @Test
+    public void testGetAvgWaterLevel(){
+
+        Calendar calendar = Calendar.getInstance();
+        Timestamp endTime = new Timestamp(calendar.getTimeInMillis());
+        calendar.add(Calendar.HOUR, - 1);
+        Timestamp beginTime = new Timestamp(calendar.getTimeInMillis());
+        System.out.println("beginTime = " + beginTime + " endTime = " + endTime);
+        Double avgWaterLevel = waterlevelRecordService.getAvgWaterLevelByInterval(beginTime, endTime);
+        System.out.println("beginTime = " + beginTime + " endTime = " + endTime + " water level = " + avgWaterLevel);
+//        System.out.println("timestamp = " + System.currentTimeMillis() + " avgWaterLevel = " + avgWaterLevel);
+//        System.out.println(new Timestamp(System.currentTimeMillis()));
+    }
 }
 
 

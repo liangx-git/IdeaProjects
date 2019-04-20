@@ -6,7 +6,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-//实现ApplicationAware获取IoC容器
+/**
+ *实现ApplicationAware接口，提供给诸如@ServerEndPoint注解的类中无法使用@Autowired自动装载对象的情况，
+ * 通过该类中的静态方法可以获取IoC容器
+ */
 @Component
 public class ApplicationContextUtil implements ApplicationContextAware {
 
