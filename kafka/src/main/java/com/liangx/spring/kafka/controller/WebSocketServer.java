@@ -4,19 +4,23 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
+import com.liangx.spring.kafka.config.GeneralConsumerConfig;
+import com.liangx.spring.kafka.consumer.Impl.BackTrackingKafkaConsumer;
 import com.liangx.spring.kafka.consumer.Impl.WebKafkaConsumer;
+import com.liangx.spring.kafka.consumer.ThreadPool.ConsumerThreadPool;
 import com.liangx.spring.kafka.utils.ApplicationContextUtil;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.utils.UserSessionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import sun.java2d.loops.FillRect;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.*;
 
 import static com.alibaba.fastjson.JSON.parseArray;
 
@@ -102,9 +106,27 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMessage(String message, Session session){
+        log.info(">>>>>>>>>>>>>> message = " + message + " <<<<<<<<<<<<<<<<<");
         if (message.equals("back")){
-            log.info(">>>>>>>>>>>>>> message = " + message + " <<<<<<<<<<<<<<<<<");
-            getWebKafkaConsumer().isBack = true;
+            //将用户i请求信息保存到userSessionUtil中管理
+            Map<String, String> sessionProps = new HashMap<>();
+            sessionProps.put(UserSessionUtil.WEBSOCKET_STATUS, "BACK");
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, -5);
+            sessionProps.put(UserSessionUtil.BEGIN_TIMESTAMP, JSON.toJSONString(calendar.getTimeInMillis()));
+            getUserSessionUtil().updateUserSessionState(session, sessionProps);
+
+            //启动backTrackingListener线程
+            BackTrackingKafkaConsumer backTrackingKafkaConsumer = new BackTrackingKafkaConsumer(getUserSessionUtil(), getGeneralConsumerConfig());
+            backTrackingKafkaConsumer.addUserSession(session);
+            getConsumerThreadPool().beginBackTrackingListener(backTrackingKafkaConsumer);
+
+
+//            BackTrackingKafkaConsumer backTrackingKafkaConsumer = getBackTrackingKafkaConsumer();
+//            if (!backTrackingKafkaConsumer.isAlive()){
+//                log.info(">>>>>>>>>>> 启动BackTrackingListener <<<<<<<<<<");
+//                backTrackingKafkaConsumer.beginListener();
+//            }
         }
 
     }
@@ -133,7 +155,19 @@ public class WebSocketServer {
         return (WebKafkaConsumer)ApplicationContextUtil.getApplicationContext().getBean("webKafkaConsumer");
     }
 
+//    private BackTrackingKafkaConsumer getBackTrackingKafkaConsumer(){
+//        return (BackTrackingKafkaConsumer)ApplicationContextUtil.getApplicationContext().getBean("backTrackingKafkaConsumer");
+//    }
+
     private PreparedBufferUtil getPreparedBufferUtil(){
         return (PreparedBufferUtil)ApplicationContextUtil.getApplicationContext().getBean("preparedBufferUtil");
+    }
+
+    private GeneralConsumerConfig getGeneralConsumerConfig(){
+        return (GeneralConsumerConfig)ApplicationContextUtil.getApplicationContext().getBean("generalConsumerConfig");
+    }
+
+    private ConsumerThreadPool getConsumerThreadPool(){
+        return (ConsumerThreadPool)ApplicationContextUtil.getApplicationContext().getBean("consumerThreadPool");
     }
 }

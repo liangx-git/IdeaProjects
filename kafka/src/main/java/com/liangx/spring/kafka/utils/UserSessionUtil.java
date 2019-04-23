@@ -16,43 +16,45 @@ import java.util.*;
 @Slf4j
 public class UserSessionUtil {
 
+    public final static String WEBSOCKET_STATUS = "session_status";
+    public final static String BEGIN_TIMESTAMP = "begin_timestamp";
+
     //保存当前正在连接用户的session
-    private List<Session> userSessions;
+//    private List<Session> userSessions = new ArrayList<Session>();
+    private Map<Session, Map<String, String>> userSessionsInfo = new HashMap<>();
 
     @Autowired
     private WebKafkaConsumer webKafkaConsumer;
 
-    private void checkUserSession(){
-        if (null == userSessions){
-            userSessions = new ArrayList<Session>();
-        }
-    }
-
     public synchronized void addUserSession(Session session){
-        checkUserSession();
-        userSessions.add(session);
-        log.info(">>>>>>>>>>>>>>> UserSessionUtil info: add user session(" + session.getId() + ") , current user number: (" + userSessions.size() + ") <<<<<<<<<<<<<<<<<<<<");
+        Map<String, String> sessionProps = new HashMap<>();
+        sessionProps.put(WEBSOCKET_STATUS, "REAL");
+        userSessionsInfo.put(session, sessionProps);   //新加session默认为real态
+        log.info(">>>>>>>>>>>>>>> UserSessionUtil info: add user session(" + session.getId() + ") , current user number: (" + userSessionsInfo.size() + ") <<<<<<<<<<<<<<<<<<<<");
     }
 
     public synchronized void removeUserSession(String id){
-        checkUserSession();
-        Iterator<Session> it = userSessions.iterator();
-        while(it.hasNext()){
-            if (id == (it.next()).getId()){
-               it.remove();
+        for (Session userSession : userSessionsInfo.keySet()){
+            if (userSession.getId() == id){
+               userSessionsInfo.remove(userSession);
             }
         }
-        log.info(">>>>>>>>>>>>>>> UserSessionUtil info: remove user session(" + id + "), current user number: (" + userSessions.size() + ")  <<<<<<<<<<<<<<<<<<<<");
+        log.info(">>>>>>>>>>>>>>> UserSessionUtil info: remove user session(" + id + "), current user number: (" + userSessionsInfo.size() + ")  <<<<<<<<<<<<<<<<<<<<");
     }
 
-    public synchronized List<Session> getUserSessions(){
-        checkUserSession();
-        return userSessions;
+    public synchronized Map<Session, Map<String, String>> getUserSessions(){
+        return userSessionsInfo;
+    }
+
+    public synchronized void updateUserSessionState(Session userSession, Map<String, String> sessionProps){
+        if (userSessionsInfo.containsKey(userSession)){
+            userSessionsInfo.put(userSession, sessionProps);
+        }
     }
 
     public synchronized boolean hasUserSession(){
-        checkUserSession();
-        return !userSessions.isEmpty();
+//        checkUserSession();
+        return !userSessionsInfo.isEmpty();
     }
 
 }

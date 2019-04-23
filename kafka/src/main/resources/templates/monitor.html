@@ -90,41 +90,52 @@
 
             </nav>
 
-            <div class="jumbotron">
+            <div class="row clearfix">
+                <div class="col-md-2 column">
+                    <button type="button" class="btn btn-primary btn-lg btn-block">按钮</button>
+                    <button type="button" class="btn btn-primary btn-lg btn-block">按钮</button>
+                </div>
 
-                <div id="test" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
-                <script>
-                    var chartTest = Highcharts.chart('test', {
-                        chart: {
-                            type: 'spline'
-                        },
-                        title: {
-                            text: '实时监控'
-                        },
-                        credits: {
-                            enabled: false
-                        },
-                        xAxis: {
-                            type: 'datetime',
-                            data: ["","","","","","","","","",""]
-                        },
-                        yAxis: {
-                            title: {
-                                text: 'm'
+                <div class="col-md-10 column">
+                    <div id="real" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
+                    <script>
+                        Highcharts.setOptions({
+                            global: {
+                                timezoneOffset: -8 * 60
+                            }
+                        });
+
+                        var chartReal = Highcharts.chart('real', {
+                            chart: {
+                                type: 'spline'
                             },
-                            min: 20,
-                            max: 100,
-                            plotBands: [{ // Light air
-                                from: 80,
-                                to: 90,
-                                color: 'rgba(255, 185, 15, 0.1)',
-                                label: {
-                                    text: '预警水位',
-                                    style: {
-                                        color: '#8B8989'
+                            title: {
+                                text: '实时监控'
+                            },
+                            credits: {
+                                enabled: false
+                            },
+                            xAxis: {
+                                type: 'datetime'//,
+                                // data: ["","","","","","","","","",""]
+                            },
+                            yAxis: {
+                                title: {
+                                    text: 'm'
+                                },
+                                min: 20,
+                                max: 100,
+                                plotBands: [{ // Light air
+                                    from: 80,
+                                    to: 90,
+                                    color: 'rgba(255, 185, 15, 0.1)',
+                                    label: {
+                                        text: '预警水位',
+                                        style: {
+                                            color: '#8B8989'
+                                        }
                                     }
-                                }
-                            }, { // Light air
+                                }, { // Light air
                                     from: 90,
                                     to: 100,
                                     color: 'rgba(255, 69, 0, 0.1)',
@@ -134,198 +145,270 @@
                                             color: '#8B8989'
                                         }
                                     }
+                                }]
+                            },
+                            tooltip: {
+                                valueSuffix: ' m'
+                            },
+                            series: [{
+                                name: 'HoHai',
+                                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                             }]
-                        },
-                        tooltip: {
-                            valueSuffix: ' m'
-                        },
-                        // plotOptions: {
-                        //     spline: {
-                        //         lineWidth: 4,
-                        //         states: {
-                        //             hover: {
-                        //                 lineWidth: 5
-                        //             }
-                        //         },
-                        //         marker: {
-                        //             enabled: false
-                        //         },
-                        //         pointInterval: 3600000, // one hour
-                        //         pointStart: Date.UTC(2009, 9, 6, 0, 0, 0)
-                        //     }
-                        // },
-                        series: [{
-                            name: 'HoHai',
-                            data: [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4]
-                        }]
-                        // ,
-                        // navigation: {
-                        //     menuItemStyle: {
-                        //         fontSize: '10px'
-                        //     }
-                        // }
-                    });
+                        });
 
-                    // var testTime = ["","","","","","","","","",""],
-                        // testPosition = [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4];
-                        // testPosition = [0,0,0,0,0,0,0,0,0,0];
+                        var updateChartReal = function (data){
 
-                    var updateChartTest = function (data){
+                            chartReal.hideLoading();
 
-                        // chartTest.hideLoading();
+                            // 准备数据
+                            var timestamp = parseInt(data.time);  //获取时间戳
+                            var date = new Date(timestamp);     //将时间戳转为Date
+                            var waterLevel = parseFloat(data.waterLevel);
+                            // var location = data.siteName;
 
-                        // 准备数据
-                        var timestamp = parseInt(data.time);  //获取时间戳
-                        var date = new Date(timestamp);     //将时间戳转为Date
-                        var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
-                        // var hhmmss = Date.UTC(timestamp);
-                        var waterLevel = parseFloat(data.waterLevel);
+                            // 更新数据
+                            // console.log("timestamp = " + timestamp + " waterLevel = " + waterLevel);
+                            chartReal.series[0].addPoint([timestamp, waterLevel], true, true);
+
+                        }
+
+                    </script>
+                </div>
+            </div>
+
+            <div class="jumbotron">
 
 
-                        // var location = data.siteName;
+                <!--<div id="real" style="height:500px;border:1px solid #ccc;padding:10px;"></div>-->
+                <!--<script>-->
+                    <!--Highcharts.setOptions({-->
+                        <!--global: {-->
+                            <!--timezoneOffset: -8 * 60-->
+                        <!--}-->
+                    <!--});-->
 
-                        // testTime.push(hhmmss);
-                        // testPosition.push(waterLevel);
-                        //
-                        // if (testTime.length >= 10){
-                        //     testTime.shift();
-                        //     testPosition.shift();
-                        // }
+                    <!--var chartReal = Highcharts.chart('real', {-->
+                        <!--chart: {-->
+                            <!--type: 'spline'-->
+                        <!--},-->
+                        <!--title: {-->
+                            <!--text: '实时监控'-->
+                        <!--},-->
+                        <!--credits: {-->
+                            <!--enabled: false-->
+                        <!--},-->
+                        <!--xAxis: {-->
+                            <!--type: 'datetime',-->
+                            <!--data: ["","","","","","","","","",""]-->
+                        <!--},-->
+                        <!--yAxis: {-->
+                            <!--title: {-->
+                                <!--text: 'm'-->
+                            <!--},-->
+                            <!--min: 20,-->
+                            <!--max: 100,-->
+                            <!--plotBands: [{ // Light air-->
+                                <!--from: 80,-->
+                                <!--to: 90,-->
+                                <!--color: 'rgba(255, 185, 15, 0.1)',-->
+                                <!--label: {-->
+                                    <!--text: '预警水位',-->
+                                    <!--style: {-->
+                                        <!--color: '#8B8989'-->
+                                    <!--}-->
+                                <!--}-->
+                            <!--}, { // Light air-->
+                                    <!--from: 90,-->
+                                    <!--to: 100,-->
+                                    <!--color: 'rgba(255, 69, 0, 0.1)',-->
+                                    <!--label: {-->
+                                        <!--text: '危险水位',-->
+                                        <!--style: {-->
+                                            <!--color: '#8B8989'-->
+                                        <!--}-->
+                                    <!--}-->
+                            <!--}]-->
+                        <!--},-->
+                        <!--tooltip: {-->
+                            <!--valueSuffix: ' m'-->
+                        <!--},-->
+                        <!--// plotOptions: {-->
+                        <!--//     spline: {-->
+                        <!--//         lineWidth: 4,-->
+                        <!--//         states: {-->
+                        <!--//             hover: {-->
+                        <!--//                 lineWidth: 5-->
+                        <!--//             }-->
+                        <!--//         },-->
+                        <!--//         marker: {-->
+                        <!--//             enabled: false-->
+                        <!--//         },-->
+                        <!--//         pointInterval: 3600000, // one hour-->
+                        <!--//         pointStart: Date.UTC(2009, 9, 6, 0, 0, 0)-->
+                        <!--//     }-->
+                        <!--// },-->
+                        <!--series: [{-->
+                            <!--name: 'HoHai',-->
+                            <!--data: [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4]-->
+                        <!--}]-->
+                        <!--// ,-->
+                        <!--// navigation: {-->
+                        <!--//     menuItemStyle: {-->
+                        <!--//         fontSize: '10px'-->
+                        <!--//     }-->
+                        <!--// }-->
+                    <!--});-->
 
-                        // console.log("testTime = " + testTime + "testPosition = " + testPosition);
-                        // chartTest.addSeries(hhmmss, waterLevel);
-                        // 更新数据
-                        console.log("hhmmss = " + hhmmss + " waterLevel = " + waterLevel);
-                        // var xDAta = chartTest.xAxis.data;
-                        chartTest.series[0].addPoint([hhmmss, waterLevel], true, true);
+                    <!--// var testTime = ["","","","","","","","","",""];-->
+                        <!--// testPosition = [55.3, 56.1, 46.3, 57.2, 75.4, 34.7, 37.5, 47.1, 59.6, 71.4];-->
+                        <!--// testPosition = [0,0,0,0,0,0,0,0,0,0];-->
+
+                    <!--var updateChartReal = function (data){-->
+
+                        <!--// chartTest.hideLoading();-->
+
+                        <!--// 准备数据-->
+                        <!--var timestamp = parseInt(data.time);  //获取时间戳-->
+                        <!--var date = new Date(timestamp);     //将时间戳转为Date-->
+                        <!--// var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();-->
+                        <!--var waterLevel = parseFloat(data.waterLevel);-->
+                        <!--// var location = data.siteName;-->
+
+                        <!--// testTime.push(hhmmss);-->
+                        <!--// testPosition.push(waterLevel);-->
+                        <!--//-->
+                        <!--// if (testTime.length >= 10){-->
+                        <!--//     testTime.shift();-->
+                        <!--//     testPosition.shift();-->
+                        <!--// }-->
+
+                        <!--// 更新数据-->
+                        <!--// console.log("timestamp = " + timestamp + " waterLevel = " + waterLevel);-->
+                        <!--// var xDAta = chartTest.xAxis.data;-->
+                        <!--chartReal.series[0].addPoint([timestamp, waterLevel], true, true);-->
 
 
-                        // chartTest.update({
-                        //     series: {
-                        //         data: testPosition
-                        //     },
-                        //     xAxis: {
-                        //         data: testTime
-                        //     }
-                        // })
-                        // chartTest.series[0].addPoint([hhmmss, waterLevel], true, true, true);
-                        // chartTest.update({
-                            // legend: {
-                            //     data: [location]
-                            // },
-                            // xAxis: {
-                            //     data: testTime
-                            // },
-                            // series: [{
-                            //     name: location,
-                            //     data: testPosition
-                            // }]
-                        // });
+                        <!--// chartTest.series[0].addPoint([hhmmss, waterLevel], true, true, true);-->
+                        <!--// chartTest.update({-->
+                            <!--// legend: {-->
+                            <!--//     data: [location]-->
+                            <!--// },-->
+                            <!--// xAxis: {-->
+                            <!--//     data: testTime-->
+                            <!--// },-->
+                            <!--// series: [{-->
+                            <!--//     name: location,-->
+                            <!--//     data: testPosition-->
+                            <!--// }]-->
+                        <!--// });-->
 
-                        // console.log("update series" + testPosition);
-                        // chartTest.series[0].update({
-                        //     data: testPosition
-                        // })
+                        <!--// console.log("update series" + testPosition);-->
+                        <!--// chartTest.series[0].update({-->
+                        <!--//     data: testPosition-->
+                        <!--// })-->
 
-                    }
+                    <!--}-->
 
-                </script>
+                <!--</script>-->
 
 
 
                 <!-- 实时监控 -->
                 <!--为ECharts准备一个具备大小（宽高）的Dom-->
-                <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
-                <script>
-                    var chartMain = echarts.init(document.getElementById('main'));
-                    chartMain.setOption({
-                        title: {
-                            text: '实时监控'
-                        },
-                        tooltip: {},
-                        legend: {
-                            data: ' '
-                        },
-                        xAxis: {
-                            name: '时间',
-                            show: true,
-                            data: []
-                        },
-                        yAxis: {
-                            name: 'm',
-                            show: true,
-                            type: 'value',
-                            max: 100,
-                            min: 0
-                            // axisLabel:{
-                            //     formatter: '{value} m'
-                            // }
-                        },
-                        series: [{
-                            name: ' ',
-                            type: 'line',
-                            data: []
-                        }]
-                    });
+                <!--<div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>-->
+                <!--<script>-->
+                    <!--var chartMain = echarts.init(document.getElementById('main'));-->
+                    <!--chartMain.setOption({-->
+                        <!--title: {-->
+                            <!--text: '实时监控'-->
+                        <!--},-->
+                        <!--tooltip: {},-->
+                        <!--legend: {-->
+                            <!--data: ' '-->
+                        <!--},-->
+                        <!--xAxis: {-->
+                            <!--name: '时间',-->
+                            <!--show: true,-->
+                            <!--data: []-->
+                        <!--},-->
+                        <!--yAxis: {-->
+                            <!--name: 'm',-->
+                            <!--show: true,-->
+                            <!--type: 'value',-->
+                            <!--max: 100,-->
+                            <!--min: 0-->
+                            <!--// axisLabel:{-->
+                            <!--//     formatter: '{value} m'-->
+                            <!--// }-->
+                        <!--},-->
+                        <!--series: [{-->
+                            <!--name: ' ',-->
+                            <!--type: 'line',-->
+                            <!--data: []-->
+                        <!--}]-->
+                    <!--});-->
 
-                    var mainTime = ["","","","","","","","","",""],
-                        mainPosition = [0,0,0,0,0,0,0,0,0,0];
+                    <!--var mainTime = ["","","","","","","","","",""],-->
+                        <!--mainPosition = [0,0,0,0,0,0,0,0,0,0];-->
 
 
-                    //准备好统一的 callback 函数
-                    var updateChartMain = function (data) { //res是json格式的response对象
+                    <!--//准备好统一的 callback 函数-->
+                    <!--var updateChartMain = function (data) { //res是json格式的response对象-->
 
-                        // 隐藏加载动画
-                        chartMain.hideLoading();
+                        <!--// 隐藏加载动画-->
+                        <!--chartMain.hideLoading();-->
 
-                        // 准备数据
-                        var timestamp = parseInt(data.time);  //获取时间戳
-                        var date = new Date(timestamp);     //将时间戳转为Date
-                        var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
-                        var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位
-                        var location = data.siteName;
+                        <!--// 准备数据-->
+                        <!--var timestamp = parseInt(data.time);  //获取时间戳-->
+                        <!--var date = new Date(timestamp);     //将时间戳转为Date-->
+                        <!--var hhmmss = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();-->
+                        <!--var waterLevel = parseFloat(data.waterLevel).toFixed(2);    //截取水位数据仅保留小数点后两位-->
+                        <!--var location = data.siteName;-->
 
-                        mainTime.push(hhmmss);
-                        mainPosition.push(waterLevel);
+                        <!--mainTime.push(hhmmss);-->
+                        <!--mainPosition.push(waterLevel);-->
 
-                        if (mainTime.length >= 10){
-                            mainTime.shift();
-                            mainPosition.shift();
-                        }
+                        <!--if (mainTime.length >= 10){-->
+                            <!--mainTime.shift();-->
+                            <!--mainPosition.shift();-->
+                        <!--}-->
 
-                        // 填入数据
-                        chartMain.setOption({
-                            legend: {
-                                data: [location]
-                            },
-                            xAxis: {
-                                data: mainTime
-                            },
-                            series: [{
-                                name: [location],
-                                data: mainPosition
-                            }]
-                        });
+                        <!--// 填入数据-->
+                        <!--chartMain.setOption({-->
+                            <!--legend: {-->
+                                <!--data: [location]-->
+                            <!--},-->
+                            <!--xAxis: {-->
+                                <!--data: mainTime-->
+                            <!--},-->
+                            <!--series: [{-->
+                                <!--name: [location],-->
+                                <!--data: mainPosition-->
+                            <!--}]-->
+                        <!--});-->
 
-                    };
+                    <!--};-->
 
-                    // 首次显示加载动画
-                    chartMain.showLoading();
+                    <!--// 首次显示加载动画-->
+                    <!--chartMain.showLoading();-->
 
-                    //图表自适应
-                    window.addEventListener("resize", function(){
-                        chartMain.resize();
-                    })
+                    <!--//图表自适应-->
+                    <!--window.addEventListener("resize", function(){-->
+                        <!--chartMain.resize();-->
+                    <!--})-->
 
-                </script>
+                <!--</script>-->
 
                 <!--<p>-->
                     <!--This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.-->
                 <!--</p>-->
                 <p>
                     <a class="btn btn-primary btn-large" onclick="back()">回溯</a>
-                </p>
+                 <p>
+                    <a class="btn btn-primary btn-large" onclick="real()">实时</a>
+                </p></p>
             </div>
+
             <div class="progress progress-striped active">
                 <div class="progress-bar progress-success">
                 </div>
@@ -620,14 +703,13 @@
         <!-- WebSocket -->
         <script>
             var back = function(){
-                // var date = new Date();
-                // var timeStamp = date.getTime();
-                // console.info("date.getTime() = " + timeStamp);
-                // var data = new Array();
-                // data.push("back");
-                // data.push(timeStamp);
-                // var dataJsonString = JSON.stringify(data);
+                console.info("调用back()");
                 socket.send("back");
+            };
+
+            var real = function(){
+                console.info("调用real()");
+                socket.send("real");
             };
 
             //定义socket连接
@@ -641,13 +723,16 @@
                         if (datas[0] == "REAL"){
                             // alert("main");
                             if (datas[1] instanceof Array){
+                                console.info("获取预缓存数据");
                                 for (var i in datas[1]){
-                                    updateChartMain(datas[1][i]);
-                                    updateChartTest(datas[1][i]);
+                                    console.info("预缓存数据： " + datas[1][i]);
+                                    // updateChartMain(datas[1][i]);
+                                    updateChartReal(datas[1][i]);
                                 }
                             }else{
-                                updateChartMain(datas[1]);
-                                updateChartTest(datas[1]);
+                                console.info("收到数据： record( timestmap = " + datas[1].timestamp + ", id = " + datas[1].id + ", siteName = " + datas[1].siteName + ", waterLevel = " + datas[1].waterLevel);
+                                // updateChartMain(datas[1]);
+                                updateChartReal(datas[1]);
                             }
 
                         }else if(datas[0] == "HOURLY"){

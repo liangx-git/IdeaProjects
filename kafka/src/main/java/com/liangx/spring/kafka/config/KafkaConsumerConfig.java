@@ -85,17 +85,17 @@ public class KafkaConsumerConfig {
         Map<String, Object> propsMap = new HashMap<>();
         propsMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
         propsMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
+        propsMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        propsMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
+        propsMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, WaterLevelRecordDeserializer.class.getName());
+//        propsMap.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 //        propsMap.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, autoCommitInterval);
 //        propsMap.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, sessionTimeout);
 //        propsMap.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, heartbeatInterval);
-        propsMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
 //        propsMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);    //设置一次批量拉取量
 //        propsMap.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollIntervalMs);    //最大poll间隔
 //        propsMap.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, fetchMinSize);
 //        propsMap.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, fetchMaxWaitMs);
-        propsMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-        propsMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, WaterLevelRecordDeserializer.class.getName());
-//        propsMap.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 //        propsMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);  //false表示禁用自动提交。通常为了启用ack模式，也就是consumer中的低级api进行消息offset保存
         return propsMap;
     }
@@ -111,12 +111,6 @@ public class KafkaConsumerConfig {
         webConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);     //禁用自动提交offset,以开启ack模式，手动提交offset
         return new DefaultKafkaConsumerFactory<>(webConsumerConfig);
     }
-
-    //BackTrackingConsumerFactory
-    private ConsumerFactory<String, WaterLevelRecord> backTrackingConsumerFactory(){
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
-    }
-
 
     //监听容器工厂类,负责产生监听容器,同时在使用@KafakListener时定义containerFactory属性时需要
     //批量监听，用户监听数据并保存于数据库中
@@ -141,8 +135,6 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-//    @Bean
-//    public ConcurrentKafkaListenerContainerFactory<String, WaterLevelRecord>
 //
 //    @Bean
 //    public KafkaMessageListenerContainer<String, WaterLevelRecord> webTestListenerContainer(){

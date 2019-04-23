@@ -107,9 +107,39 @@ public class KafkaApplicationTests {
             water_level = Double.valueOf(df.format(water_level));
             WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), i++, 104, "hohai", water_level);
             kafkaProducer.send("liangx-message", waterLevelRecord);
-            Thread.sleep(6000);
+            Thread.sleep(3000);
         }
     }
+
+    @Test
+    public void createTimestamp() throws InterruptedException {
+        Calendar calendar = Calendar.getInstance();
+        for (int i = 1; i <= 10; ++i){
+            calendar.add(Calendar.MONTH, -1);    //每次循环倒退一个月
+           for(int j = 1; j <= 10; ++j){
+               calendar.add(Calendar.DAY_OF_MONTH, -1);
+//               System.out.println(new Timestamp(calendar.getTimeInMillis()));
+               for (int k = 1; k <= 5; ++k){
+                   calendar.add(Calendar.HOUR, -1);
+                   createMessage(new Timestamp(calendar.getTimeInMillis()));
+               }
+           }
+        }
+    }
+
+    public void createMessage(Timestamp timestamp) throws InterruptedException {
+        Random random = new Random();
+        DecimalFormat df = new DecimalFormat("0.0");
+        int i = 0;
+        double water_level = 50.0;
+        double inc = (random.nextDouble()*(15 - 0)) - 7;
+        water_level += (water_level + inc) > 20 ? ((water_level + inc) < 100 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
+        water_level = Double.valueOf(df.format(water_level));
+        WaterLevelRecord waterLevelRecord = new WaterLevelRecord(timestamp, i++, 104, "hohai", water_level);
+        kafkaProducer.send("liangx-message", waterLevelRecord);
+        Thread.sleep(10);
+    }
+
 
     @Autowired
     private WaterLevelRecordService waterlevelRecordService;
