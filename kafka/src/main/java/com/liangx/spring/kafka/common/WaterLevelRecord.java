@@ -14,9 +14,11 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 public class WaterLevelRecord implements Serializable {
 
+    public static int s_id = 0;
+
     private Timestamp time;
 
-    private int id;
+//    private int id;
 
     private int siteId;
 
@@ -24,11 +26,16 @@ public class WaterLevelRecord implements Serializable {
 
     private Double waterLevel;
 
+//    public void setId(int id){
+//        this.id = id;
+//        s_id = id;
+//    }
+
     @Override
     public String toString(){
         return "WaterLevelRecord{" +
                 "time = ‘" + time + '\'' +
-                "id = '" + id + '\'' +
+//                "id = '" + id + '\'' +
                 "siteId = ‘" + siteId + '\'' +
                 "siteName = ‘" + siteName + '\'' +
                 "waterLevel = ‘" + waterLevel + '\'' +

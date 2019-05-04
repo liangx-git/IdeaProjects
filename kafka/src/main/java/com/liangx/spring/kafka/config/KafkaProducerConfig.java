@@ -3,7 +3,7 @@ package com.liangx.spring.kafka.config;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.common.WaterLevelRecordSerializer;
-import com.liangx.spring.kafka.producer.KafkaSendResultHandler;
+import com.liangx.spring.kafka.producer.KafkaProducerSendResultHandler;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,7 +63,7 @@ public class KafkaProducerConfig {
     public KafkaTemplate<String, WaterLevelRecord> defaultKafkaTemplate(){
         KafkaTemplate<String, WaterLevelRecord> defaultTemplate = new KafkaTemplate<>(producerFactory());
         defaultTemplate.setDefaultTopic("liangx-message");
-        defaultTemplate.setProducerListener(new KafkaSendResultHandler());
+        defaultTemplate.setProducerListener(new KafkaProducerSendResultHandler());
         return defaultTemplate;
     }
 

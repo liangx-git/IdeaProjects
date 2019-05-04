@@ -1,20 +1,14 @@
 package com.liangx.spring.kafka.config;
 
 import com.liangx.spring.kafka.common.WaterLevelRecordDeserializer;
-import com.liangx.spring.kafka.consumer.Impl.WebKafkaConsumer;
-import com.liangx.spring.kafka.utils.UserSessionUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.Session;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 
 @Component("generalConsumerConfig")
 @Setter

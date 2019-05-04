@@ -1,8 +1,8 @@
-package com.liangx.spring.kafka.service.impl;
+package com.liangx.spring.kafka.services.RecordDurableService.Impl;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.mapper.WaterLevelRecordMapper;
-import com.liangx.spring.kafka.service.WaterLevelRecordService;
+import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,9 +35,4 @@ public class WaterLevelRecordServiceImpl implements WaterLevelRecordService {
         return waterLevelRecordMapper.getAvgWaterLevelByInterval(beginTime, endTime);
     }
 
-    @Override
-    public WaterLevelRecord queryById(Integer id) {
-        WaterLevelRecordMapper waterLevelRecordMapper = sqlSession.getMapper(WaterLevelRecordMapper.class);
-        return waterLevelRecordMapper.queryById(id);
-    }
 }

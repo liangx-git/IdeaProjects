@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/css/bootstrap/4.0.0/bootstrap.min.css">
+    <link href="/css/v3/layoutit.css" rel="stylesheet">
+    <link href="/css/jquery-ui.min.css" rel="stylesheet">
+    <link href="/css/bootstrap/toastr.min.css" rel="stylesheet">
+    <script src="/js/jquery-2.1.4.min.js"></script>
+    <script src="/js/jquery-ui.min.js"></script>
+    <script src="/js/echarts.min.js"></script>
+    <script src="/js/highchart.js"></script>
+    <script src="/js/toastr.min.js"></script>
+</head>
+<body>
+
+<div id="daily"class="col-md-12 column" style="height:350px;border:1px solid #ccc;padding:10px;">
+    <script>
+        // 定义实时图表
+        var chartDaily = Highcharts.chart('daily', {
+            chart: {
+                type: 'spline',
+                animation: {
+                    duration: 50
+                },
+                height: 300
+            },
+            title: {
+                text: '日监控'
+            },
+            credits: {
+                enabled: false
+            },
+            loading: {  // 加载中选项配置
+                labelStyle: {
+                    color: 'red',
+                    fontSize: '12px'
+                }
+            },
+            xAxis: {
+                type: 'category'
+            },
+            yAxis: {
+                title: {
+                    text: 'm'
+                },
+                min: 20,
+                max: 100
+            },
+            tooltip: {
+                valueSuffix: ' m'
+            },
+            series: [{
+                name: 'HoHai',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            }]
+        });
+
+        var chartDailySeriesDatas = [];
+
+        function updateChartDaily(data){
+            updateChartDailySeriesDatas(chartDailySeriesDatas, data);
+            chartDaily.series[0].update({'data': chartDailySeriesDatas});
+        }
+
+        function updateChartDailyByArray(datas){
+            for (var i in datas){
+                updateChartDailySeriesDatas(chartDailySeriesDatas, datas[i]);
+            }
+            chartDaily.series[0].update({'data': chartDailySeriesDatas});
+        }
+
+        function updateChartDailySeriesDatas(seriesDatas, data){
+            var record = {};
+            var date = new Date(data.time);
+            record["name"] = date.getHours() + "(h)";
+            record["y"] = data.waterLevel;
+            seriesDatas.push(record);
+            if (seriesDatas.length > 24){
+                seriesDatas.shift();
+            }
+        }
+
+        var buffer = $("#preparedBuffer").val();
+        console.info("buffer = " + JSON.stringify(buffer));
+        // for (var i in ${preparedBuffer}){
+        //
+        // }
+
+    </script>
+
+
+    <p>
+        <a class="btn" href="#">View details »</a>
+
+    </p>
+
+
+
+</div>
+
+</body>
+</html>

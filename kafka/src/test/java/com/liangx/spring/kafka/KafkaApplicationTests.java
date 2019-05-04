@@ -1,7 +1,7 @@
 package com.liangx.spring.kafka;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
-import com.liangx.spring.kafka.service.WaterLevelRecordService;
+import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.producer.KafkaProducer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,10 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Random;
 
 @RunWith(SpringRunner.class)
@@ -105,7 +105,7 @@ public class KafkaApplicationTests {
             double inc = (random.nextDouble()*(15 - 0)) - 7;
             water_level += (water_level + inc) > 20 ? ((water_level + inc) < 100 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
             water_level = Double.valueOf(df.format(water_level));
-            WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), i++, 104, "hohai", water_level);
+            WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), 104, "hohai", water_level);
             kafkaProducer.send("liangx-message", waterLevelRecord);
             Thread.sleep(3000);
         }
@@ -135,7 +135,7 @@ public class KafkaApplicationTests {
         double inc = (random.nextDouble()*(15 - 0)) - 7;
         water_level += (water_level + inc) > 20 ? ((water_level + inc) < 100 ? inc : 0) : 0;     //随机生成的water_leve区间为(20, 80)
         water_level = Double.valueOf(df.format(water_level));
-        WaterLevelRecord waterLevelRecord = new WaterLevelRecord(timestamp, i++, 104, "hohai", water_level);
+        WaterLevelRecord waterLevelRecord = new WaterLevelRecord(timestamp, 104, "hohai", water_level);
         kafkaProducer.send("liangx-message", waterLevelRecord);
         Thread.sleep(10);
     }
@@ -144,11 +144,6 @@ public class KafkaApplicationTests {
     @Autowired
     private WaterLevelRecordService waterlevelRecordService;
 
-    @Test
-    public void testMybaitsMapper(){
-        WaterLevelRecord waterlevelRecord = waterlevelRecordService.queryById(1);
-        System.out.println(waterlevelRecord.toString());
-    }
 
     @Test
     public void testGetAvgWaterLevel(){
@@ -162,6 +157,19 @@ public class KafkaApplicationTests {
         System.out.println("beginTime = " + beginTime + " endTime = " + endTime + " water level = " + avgWaterLevel);
 //        System.out.println("timestamp = " + System.currentTimeMillis() + " avgWaterLevel = " + avgWaterLevel);
 //        System.out.println(new Timestamp(System.currentTimeMillis()));
+    }
+
+
+    @Test
+    public void testDatas(){
+       Calendar calendar = Calendar.getInstance();
+       Timestamp timestamp1 = new Timestamp(calendar.getTimeInMillis());
+       calendar.add(Calendar.SECOND, -10);
+       Timestamp timestamp2 = new Timestamp(calendar.getTimeInMillis());
+       boolean gt = timestamp1.getTime() == timestamp2.getTime() + 10000;
+       System.out.println("timestamp1 = " + timestamp1 + " timestamp2 = " + timestamp2);
+       System.out.println("timestamp1 == timestamp2 + 10000 = " + gt);
+
     }
 }
 

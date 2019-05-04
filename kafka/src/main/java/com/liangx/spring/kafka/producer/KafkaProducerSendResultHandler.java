@@ -9,17 +9,17 @@ import org.springframework.stereotype.Component;
 
 //生产者消息回调类
 @Component
-public class KafkaSendResultHandler implements ProducerListener {
+public class KafkaProducerSendResultHandler implements ProducerListener {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaSendResultHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaProducerSendResultHandler.class);
 
     @Override
     public void onError(ProducerRecord producerRecord, Exception exception) {
-        log.info("----------------------------------================Message send error: " + producerRecord.toString());
+        log.info("[ KafkaProducerSendReslutHandler ] : Message send error: " + producerRecord.toString());
     }
 
     @Override
     public void onSuccess(ProducerRecord producerRecord, RecordMetadata recordMetadata) {
-        log.info("---------------------------------================Message send success: " + producerRecord.toString());
+        log.info("[ KafkaProducerSendResultHandler ] : Message send success: " + producerRecord.toString());
     }
 }

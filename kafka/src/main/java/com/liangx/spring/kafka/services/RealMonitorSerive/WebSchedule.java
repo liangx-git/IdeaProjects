@@ -2,7 +2,7 @@
 //
 //import com.alibaba.fastjson.JSON;
 //import com.liangx.spring.kafka.common.WaterLevelRecord;
-//import com.liangx.spring.kafka.service.WaterLevelRecordService;
+//import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 //import com.liangx.spring.kafka.utils.UserSessionUtil;
 //import lombok.extern.slf4j.Slf4j;
 //import org.apache.catalina.User;
@@ -59,7 +59,7 @@
 //        msg.add(waterLevelRecord);
 //
 //        //给所有用户发送数据
-//        List<Session> userSessions = userSessionUtil.getUserSessions();
+//        List<Session> userSessions = userSessionUtil.getUserSessionsInfoContainer();
 //        for (Session userSession : userSessions){
 //            synchronized (userSession){
 //                log.info(">>>>>>>>>>>>>> WebSchedule info: 给用户session(" + userSession.getId() + ")发送数据 : " + msg);
@@ -93,7 +93,7 @@
 //        msg.add(waterLevelRecord);
 //
 //        //给所有用户发送数据
-//        List<Session> userSessions = userSessionUtil.getUserSessions();
+//        List<Session> userSessions = userSessionUtil.getUserSessionsInfoContainer();
 //        for (Session userSession : userSessions){
 //            synchronized (userSession){
 //                log.info(">>>>>>>>>>>>>> WebSchedule info: 给用户session(" + userSession.getId() + ")发送数据 : " + msg);
