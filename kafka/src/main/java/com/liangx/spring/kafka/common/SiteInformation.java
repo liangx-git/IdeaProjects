@@ -6,10 +6,10 @@ import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
-@Component
+//@Component
 public class SiteInformation {
 
-    private int siteId = 0;
+    public static int siteId = 0;
 
-    private String siteName = "";
+    public static String siteName = "";
 }

@@ -258,20 +258,23 @@
                 });
 
                 //将需要回溯的时间戳发送给后端
+                var backTrackingServiceStarted = false;
                 var sendSliderTimestampByIndex = function(index){
-                    var msg = [];
+                    if (!backTrackingServiceStarted)
+                    {
+                        socket.send(JSON.stringify(["subscribe_back_tracking_service"]));
+                        backTrackingServiceStarted = false;
+                        console.info("订阅backTrackingService");
+                    }
+
                     if (index === 0){
                         console.info("back_tracking_done");
-                        msg.push("back_tracking_done");
                         var time = getTimestamp(index);
-                        msg.push(time);
-                        socket.send(JSON.stringify(msg));
+                        socket.send(JSON.stringify(["unsubscribe_back_tracking_service", time]));
+                        backTrackingServiceStarted = false;
                     }else{
-                        msg.push("back_tracking");
                         var time = getTimestamp(index);
-                        msg.push(time);
-                        socket.send(JSON.stringify(msg));
-                        console.info("msg = " + JSON.stringify(msg));
+                        socket.send(JSON.stringify(["back_tracking", time]));
                     }
 
                 };
@@ -400,7 +403,7 @@
             </script>
 
             <p>
-                <a class="btn" href="../hourlymonitor">View details »</a>
+                <a class="btn" href="hourlymonitor">View details »</a>
             </p>
 
         </div>
@@ -597,10 +600,12 @@
             var socket;
             function ws() {
                 if (window.WebSocket) {
+
                     socket = new WebSocket("ws://localhost:8080/webSocket");
                     // socket = new WebSocket("ws://192.168.42.183:8080/webSocket");
-                    socket.onmessage = function (event) {
 
+
+                    socket.onmessage = function (event) {
                         var datas = JSON.parse(event.data);
                         if (datas[0] === "real_monitor"){
                             if (datas[1] instanceof Array){
@@ -620,7 +625,8 @@
                             if (datas[1] instanceof Array){
                                 updateChartDailyByArray(datas[1]);
                             }else{
-                                updateChartReal(datas[1]);
+                                updateChartDaily(datas[1]);
+                                console.info("update chartDaily data = " + JSON.stringify(datas[1]));
                             }
 
                         }else if(datas[0] === "weekly_monitor"){
@@ -644,18 +650,21 @@
                         }
 
                     };
+
                     socket.onopen = function (event) {
                         console.info("连接开启");
 
-                        var dailyPreparedBufferOrder = [];
-                        dailyPreparedBufferOrder.push("daily_monitor")
-                        socket.send(JSON.stringify(dailyPreparedBufferOrder));
+                        //请求实时监控数据
+                        socket.send(JSON.stringify(["subscribe_real_monitor_service"]));
 
-                        var weeklyPreparedBufferOrder = [];
-                        weeklyPreparedBufferOrder.push("weekly_monitor");
-                        socket.send(JSON.stringify(weeklyPreparedBufferOrder));
+                        //请求日监控预缓存数据
+                        socket.send(JSON.stringify(["subscribe_daily_monitor_service"]));
+
+                        //请求周监控预缓存数据
+                        socket.send(JSON.stringify(["subscribe_weekly_monitor_service"]));
 
                     };
+
                     socket.onclose = function (event) {
                         console.info("连接被关闭");
                     };
@@ -667,7 +676,7 @@
 
             //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
             $(document).ready(function() {
-                namespace = '/test';
+                // namespace = '/test';
 
                 //开始建立WebSocket传输数据
                 ws();

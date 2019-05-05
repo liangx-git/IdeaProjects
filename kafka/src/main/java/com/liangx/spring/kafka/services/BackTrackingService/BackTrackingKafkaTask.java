@@ -33,10 +33,10 @@ public class BackTrackingKafkaTask implements Runnable, MyKafkaConsumer{
     private Queue<String> userSessionIds = new LinkedList<>();
 
     //构造函数
-    public BackTrackingKafkaTask(UserSessionUtil userSessionUtil, GeneralConsumerConfig generalConsumerConfig){
-        this.userSessionUtil = userSessionUtil;
-        this.generalConsumerConfig = generalConsumerConfig;
-    }
+//    public BackTrackingKafkaTask(UserSessionUtil userSessionUtil, GeneralConsumerConfig generalConsumerConfig){
+//        this.userSessionUtil = userSessionUtil;
+//        this.generalConsumerConfig = generalConsumerConfig;
+//    }
 
     public void addUserSession(String sessionId){
         userSessionIds.add(sessionId);
@@ -60,7 +60,7 @@ public class BackTrackingKafkaTask implements Runnable, MyKafkaConsumer{
 
             //获取session当前传递的MessageEntity对象
             MessageEntity message = userSessionUtil.getUserSessionMessageEntity(userSessionId);
-            if ((message.getType()).equals(MessageEntity.BACK_TRACKING)){
+            if ((message.getRequestType()).equals(MessageEntity.BACK_TRACKING)){
 
                 //根据timestamp设置各分区的offset
 //                Timestamp beginTimestamp = new Timestamp((Long) JSON.parse(sessionProps.get(UserSessionUtil.REQUEST_TIME)));
@@ -68,13 +68,13 @@ public class BackTrackingKafkaTask implements Runnable, MyKafkaConsumer{
                 updateConsumerOffsetByTimestamp(consumer, beginTimestamp);
 
                 //准备数据
-                message.setType(MessageEntity.REAL_MONITOR);
+                message.setRequestType(MessageEntity.REAL_MONITOR);
                 List<WaterLevelRecord> waterLevelRecords = getRecordByConsumerPoll(consumer);
                 message.setBuffer(waterLevelRecords);
                 userSessionUtil.setUserSessionMessageEntity(userSessionId, message, true);
 
                 //表示该次请求操作被处理
-                message.setType(MessageEntity.BACK_TRACKING_PROCESSING);
+                message.setRequestType(MessageEntity.BACK_TRACKING_PROCESSING);
                 userSessionUtil.setUserSessionMessageEntity(userSessionId,message);
 
                 //设置用户下次操作超时时间

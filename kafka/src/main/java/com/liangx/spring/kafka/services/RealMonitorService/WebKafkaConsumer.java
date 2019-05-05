@@ -1,13 +1,12 @@
-package com.liangx.spring.kafka.services.RealMonitorListenerService;
+package com.liangx.spring.kafka.services.RealMonitorService;
 
-import com.alibaba.fastjson.JSON;
 import com.liangx.spring.kafka.common.MessageEntity;
+import com.liangx.spring.kafka.common.ServiceType;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.services.MyKafkaConsumer;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.utils.UserSessionUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -33,19 +32,11 @@ public class WebKafkaConsumer implements MyKafkaConsumer {
     @Autowired
     private PreparedBufferUtil preparedBufferUtil;
 
-    public boolean isBack = false;
-
-    private int i = 0;
-
-    private int partition;
-
-    private Long offset;
-
     @Autowired
     private KafkaListenerContainerFactory kafkaListenerContainerFactory;
 
     @KafkaListener(id="webListener", clientIdPrefix="web", topics="${kafka.consumer.topic}", containerFactory="webKafkaListenerContainerFactory")
-    public void webListener(ConsumerRecord<String, WaterLevelRecord> consumerRecord) {
+    private void webListener(ConsumerRecord<String, WaterLevelRecord> consumerRecord) {
         log.info("[ WebKafkaConsumer ] : 从kafka监听到数据（partition = " + consumerRecord.partition() + ", offset = " + consumerRecord.offset() + "）");
 
         //更新UserSessionUtil中的预缓存队列
@@ -61,21 +52,50 @@ public class WebKafkaConsumer implements MyKafkaConsumer {
         MessageEntity message = new MessageEntity(MessageEntity.REAL_MONITOR, consumerRecord.value());
 
         //对订阅了RealMonitorListener的用户session发送实时记录
-        List<String> userSessionIds = userSessionUtil.getUserSessionIds();
+        List<String> userSessionIds = userSessionUtil.getSubcribedServicesUserSessionIds(ServiceType.REAL_MONITOR_SERVICE);
         for (String userSessionId : userSessionIds){
-            String userSessionRequestService = userSessionUtil.getUserSessionRequestService(userSessionId);
-            if (userSessionRequestService.equals(UserSessionUtil.REAL_MONITOR_SERVICE)){
-                userSessionUtil.setUserSessionMessageEntity(userSessionId, message, true);
-                log.info("[ WebKafkaConsumer ] : consumer(" + Thread.currentThread().getName() + ")给用户session(" + userSessionId + ")发送数据");
-            }else if (userSessionRequestService.equals(UserSessionUtil.REAL_MONITOR_SERVICE_START)){    //WebListener为刚加入监听队列的session推送预缓存队列
-                if (preparedBufferUtil.realMonitorPreparedBufferIsReady()){
-                    sendPrepraredBuffer(userSessionId);
-                    log.info("[ WebKafkaConsumer ] : consumer(" + Thread.currentThread().getName() + ")给用户session(" + userSessionId + ")发送预缓存数据");
-                }
-                userSessionUtil.setUserSessionRequestService(userSessionId, UserSessionUtil.REAL_MONITOR_SERVICE);
-            }
+            userSessionUtil.setUserSessionMessageEntity(userSessionId, message, true);
+            log.info("[ WebKafkaConsumer ] : consumer(" + Thread.currentThread().getName() + ")给用户session(" + userSessionId + ")发送数据");
         }
     }
+
+    /**
+     * 为userSession开启RealMonitor服务
+     * @param userSessionId
+     */
+    public void startRealMonitorServiceForUserSession(String userSessionId){
+        //启动RealMonitor前，发送预缓存
+        sendRealMonitorPreparedBuffer(userSessionId);
+
+        //当WebKafkaConsumer中的Listener线程未启动时启动
+        if (!listenerIsWorking()){
+            startWebListener();
+        }
+    }
+
+
+    /**
+     *取消订阅RealMonitorService
+     * @param userSessionId
+     */
+    public void stopRealMonitorServiceForUserSession(String userSessionId) {
+
+        //当前取消订阅的UserSession为最后一个时，真正关闭(暂停)RealMonitorService服务
+        if (userSessionUtil.noUserSessionSubscribedService(ServiceType.REAL_MONITOR_SERVICE)){
+            stopWebListener();
+        }
+    }
+
+
+    private void sendRealMonitorPreparedBuffer(String userSessionId){
+        if (preparedBufferUtil.realMonitorPreparedBufferIsReady()) {
+            List<WaterLevelRecord> realMonitorPreparedBuffer = preparedBufferUtil.getRealBuffer();
+            userSessionUtil.setUserSessionMessageEntity(userSessionId, new MessageEntity(MessageEntity.REAL_MONITOR, realMonitorPreparedBuffer), true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
+
+            log.info("[ RealMonitorService ] : 给用户session(" + userSessionId + ")发送RealPrepreadBuffer");
+        }
+    }
+
 
     private boolean recordIsToOld(WaterLevelRecord record){
         long timeMillis = record.getTime().getTime();
@@ -87,7 +107,7 @@ public class WebKafkaConsumer implements MyKafkaConsumer {
     /**
      * 开启webListener监听kafka消息
      */
-    public void startWebListener(){
+    private void startWebListener(){
         log.info("[ WebKafkaConsumer ] : WebListener.start");
 
         //判断监听容器是否已经启动，否则启动
@@ -97,10 +117,11 @@ public class WebKafkaConsumer implements MyKafkaConsumer {
         registry.getListenerContainer("webListener").resume();
     }
 
+
     /**
      * 关闭/暂停WebKafkaListener
       */
-    public void stopWebListener(){
+    private void stopWebListener(){
         log.info("[ WebKafkaConsumer ] : WebListener.pause ");
         if (registry.getListenerContainer("webListener").isRunning()){
            registry.getListenerContainer("webListener").pause();
@@ -108,34 +129,14 @@ public class WebKafkaConsumer implements MyKafkaConsumer {
         }
     }
 
+
     /**
      * 判断WebListener是否在工作
      * @return 当WebListener为running && no pause状态时返回true
      */
-    public boolean listenerIsWorking(){
-//        log.info("**********************webKafkaConsumer.listenerIsRunning = " + registry.getListenerContainer("webListener").isRunning());
-//        log.info("**********************webKafkaConsumer.listenerIsPauseRequested = " + registry.getListenerContainer("webListener").isPauseRequested());
-//        log.info("**********************webKafkaConsumer.listenerIsContainerPaused = " + registry.getListenerContainer("webListener").isContainerPaused());
-
+    private boolean listenerIsWorking(){
         return registry.getListenerContainer("webListener").isRunning()
                 && !registry.getListenerContainer("webListener").isPauseRequested();
     }
 
-    private void sendPrepraredBuffer(String userSessionId){
-        Queue<WaterLevelRecord> realBuffer = preparedBufferUtil.getRealBuffer();
-        if (!realBuffer.isEmpty()){
-            MessageEntity message = new MessageEntity(MessageEntity.REAL_MONITOR, realBuffer);
-            userSessionUtil.setUserSessionMessageEntity(userSessionId, message, true);
-        }
-    }
-
-    private void sendMsg(Session session, String msg){
-        try {
-            synchronized (session){
-                session.getBasicRemote().sendText(msg);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

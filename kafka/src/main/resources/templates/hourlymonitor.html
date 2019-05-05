@@ -14,91 +14,135 @@
     <script src="/js/toastr.min.js"></script>
 </head>
 <body>
+<div class="container">
+    <div class="row clearfix">
+        <div id="daily"class="col-md-12 column" style="height:350px;border:1px solid #ccc;padding:10px;">
+            <script>
+                // 定义实时图表
+                var chartDaily = Highcharts.chart('daily', {
+                    chart: {
+                        type: 'spline',
+                        animation: {
+                            duration: 50
+                        },
+                        height: 300
+                    },
+                    title: {
+                        text: '日监控'
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    loading: {  // 加载中选项配置
+                        labelStyle: {
+                            color: 'red',
+                            fontSize: '12px'
+                        }
+                    },
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'm'
+                        },
+                        min: 20,
+                        max: 100
+                    },
+                    tooltip: {
+                        valueSuffix: ' m'
+                    },
+                    series: [{
+                        name: 'HoHai',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    }]
+                });
 
-<div id="daily"class="col-md-12 column" style="height:350px;border:1px solid #ccc;padding:10px;">
-    <script>
-        // 定义实时图表
-        var chartDaily = Highcharts.chart('daily', {
-            chart: {
-                type: 'spline',
-                animation: {
-                    duration: 50
-                },
-                height: 300
-            },
-            title: {
-                text: '日监控'
-            },
-            credits: {
-                enabled: false
-            },
-            loading: {  // 加载中选项配置
-                labelStyle: {
-                    color: 'red',
-                    fontSize: '12px'
+                var chartDailySeriesDatas = [];
+
+                function updateChartDaily(data){
+                    updateChartDailySeriesDatas(chartDailySeriesDatas, data);
+                    chartDaily.series[0].update({'data': chartDailySeriesDatas});
                 }
-            },
-            xAxis: {
-                type: 'category'
-            },
-            yAxis: {
-                title: {
-                    text: 'm'
-                },
-                min: 20,
-                max: 100
-            },
-            tooltip: {
-                valueSuffix: ' m'
-            },
-            series: [{
-                name: 'HoHai',
-                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            }]
-        });
 
-        var chartDailySeriesDatas = [];
+                function updateChartDailyByArray(datas){
+                    for (var i in datas){
+                        updateChartDailySeriesDatas(chartDailySeriesDatas, datas[i]);
+                    }
+                    chartDaily.series[0].update({'data': chartDailySeriesDatas});
+                }
 
-        function updateChartDaily(data){
-            updateChartDailySeriesDatas(chartDailySeriesDatas, data);
-            chartDaily.series[0].update({'data': chartDailySeriesDatas});
-        }
+                function updateChartDailySeriesDatas(seriesDatas, data){
+                    var record = {};
+                    var date = new Date(data.time);
+                    record["name"] = date.getHours() + "(h)";
+                    record["y"] = data.waterLevel;
+                    seriesDatas.push(record);
+                    if (seriesDatas.length > 24){
+                        seriesDatas.shift();
+                    }
+                }
 
-        function updateChartDailyByArray(datas){
-            for (var i in datas){
-                updateChartDailySeriesDatas(chartDailySeriesDatas, datas[i]);
-            }
-            chartDaily.series[0].update({'data': chartDailySeriesDatas});
-        }
+                var buffer = $("#preparedBuffer").val();
+                console.info("buffer = " + JSON.stringify(buffer));
+                // for (var i in ${preparedBuffer}){
+                //
+                // }
 
-        function updateChartDailySeriesDatas(seriesDatas, data){
-            var record = {};
-            var date = new Date(data.time);
-            record["name"] = date.getHours() + "(h)";
-            record["y"] = data.waterLevel;
-            seriesDatas.push(record);
-            if (seriesDatas.length > 24){
-                seriesDatas.shift();
-            }
-        }
-
-        var buffer = $("#preparedBuffer").val();
-        console.info("buffer = " + JSON.stringify(buffer));
-        // for (var i in ${preparedBuffer}){
-        //
-        // }
-
-    </script>
+            </script>
 
 
-    <p>
-        <a class="btn" href="#">View details »</a>
+            <p>
+                <a class="btn" href="#">View details »</a>
 
-    </p>
+            </p>
 
-
-
+        </div>
+    </div>
 </div>
+
+
+<script>
+    //定义socket连接
+    var socket;
+    function ws() {
+        if (window.WebSocket) {
+            socket = new WebSocket("ws://localhost:8080/webSocket");
+            // socket = new WebSocket("ws://192.168.42.183:8080/webSocket");
+
+            socket.onmessage = function (event) {
+                var datas = JSON.parse(event.data);
+                if(datas[0] === "daily_monitor"){
+                    if (datas[1] instanceof Array){
+                        updateChartDailyByArray(datas[1]);
+                    }else{
+                        updateChartDaily(datas[1]);
+                        console.info("update chartDaily data = " + JSON.stringify(datas[1]));
+                    }
+                }
+            };
+
+            socket.onopen = function (event) {
+                console.info("连接开启");
+
+                //请求daily_monitor 预缓存
+                socket.send(JSON.stringify(["subscribe_daily_monitor_service"]));
+            };
+            socket.onclose = function (event) {
+                console.info("连接被关闭");
+            };
+        } else {
+            alert("你的浏览器不支持 WebSocket！");
+        }
+
+    }
+
+    //建立socket连接，等待服务器“推送”数据，用回调函数更新图表
+    $(document).ready(function() {
+        //开始建立WebSocket传输数据
+        ws();
+    });
+</script>
 
 </body>
 </html>

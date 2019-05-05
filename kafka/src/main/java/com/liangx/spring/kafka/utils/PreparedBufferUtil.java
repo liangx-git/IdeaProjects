@@ -20,7 +20,7 @@ public class PreparedBufferUtil {
     private WaterLevelRecordService waterLevelRecordService;
 
     //数据预缓存队列，只在session连接时推送一次，用于填充前端的图表
-    private Queue<WaterLevelRecord> realBuffer = new LinkedList<>();//real图表缓存
+    private LinkedList<WaterLevelRecord> realBuffer = new LinkedList<>();//real图表缓存
 
 
     /**
@@ -39,7 +39,7 @@ public class PreparedBufferUtil {
      * 获取real缓存队列数据
      * @return
      */
-    public Queue<WaterLevelRecord> getRealBuffer(){
+    public List<WaterLevelRecord> getRealBuffer(){
         return realBuffer;
     }
 

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.jws.WebParam;
 import java.util.List;
 
 @Slf4j
@@ -27,9 +28,14 @@ public class MainController{
     @RequestMapping("/hourlymonitor")
     public ModelAndView hourlyMonitor(){
         ModelAndView model = new ModelAndView();
-        List<WaterLevelRecord> buffer= preparedBufferUtil.getHourlyBuffer();
-        model.addObject("preparedBuffer", buffer);
         model.setViewName("hourlymonitor.html");
+        return model;
+    }
+
+    @RequestMapping("/testmonitor")
+    public ModelAndView testmonitor(){
+        ModelAndView model = new ModelAndView();
+        model.setViewName("testmonitor.html");
         return model;
     }
 

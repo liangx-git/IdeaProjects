@@ -13,6 +13,10 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
@@ -25,22 +29,34 @@ public class DurableKafkaConsumer implements MyKafkaConsumer {
 
     private Timer timer;
 
-    @Autowired
-    private SiteInformation siteInformation;
+//    @Autowired
+//    private SiteInformation siteInformation;
 
     //持久层服务
     @Autowired
     private WaterLevelRecordService waterLevelRecordService;
 
     public DurableKafkaConsumer(){
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                log.info("[ DurableKafkaConsumer ] : 执行定时任务（storingDatasAtWholePoint）");
-                storingDatasAtWholePoint();
-            }
-        }, 0, 60 * 1000);
+
+        //没小时保存一次平均水位
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                       storingDatasAtWholePoint();
+                    }
+                }, 0, 60 * 60, TimeUnit.SECONDS);
+
+
+//        timer = new Timer();
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                log.info("[ DurableKafkaConsumer ] : 执行定时任务（storingDatasAtWholePoint）");
+//                storingDatasAtWholePoint();
+//            }
+//        }, 0, 60 * 1000);
         log.info("[ DurableKafkaConsumer ] : 启动定时任务（storingDatasAtWholePoint）");
 
     }
@@ -50,9 +66,6 @@ public class DurableKafkaConsumer implements MyKafkaConsumer {
 
         updateSiteInformationIfDiff(consumerRecords.get(0).value());
 
-//        整点时存储数据
-//        storingDatasAtWholePoint();
-
         updateAverageHourWaterLevelAndAverageHourlyCount(consumerRecords);
     }
 
@@ -60,20 +73,18 @@ public class DurableKafkaConsumer implements MyKafkaConsumer {
         int siteId = waterLevelRecord.getSiteId();
         String siteName = waterLevelRecord.getSiteName();
 
-        if (siteInformation.getSiteId() == 0 || siteInformation.getSiteId() != siteId){
-            siteInformation.setSiteId(siteId);
-            siteInformation.setSiteName(siteName);
+        if (SiteInformation.siteId == 0 || SiteInformation.siteId != siteId){
+            SiteInformation.siteId = siteId;
+            SiteInformation.siteName =siteName;
         }
     }
 
     private void storingDatasAtWholePoint(){
         DecimalFormat df = new DecimalFormat("0.0");
-//        Calendar calendar = Calendar.getInstance();
-//        if (calendar.get(Calendar.SECOND) == 0 && averageHourlyWaterLevel != 0){
         if (averageHourlyWaterLevel != 0){
             //准备数据
             double waterLevel =Double.valueOf(df.format(averageHourlyWaterLevel / averageHourlyCount));
-            WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), siteInformation.getSiteId(), siteInformation.getSiteName(), waterLevel);
+            WaterLevelRecord waterLevelRecord = new WaterLevelRecord(new Timestamp(System.currentTimeMillis()), SiteInformation.siteId, SiteInformation.siteName, waterLevel);
 
             //数据持久化
             waterLevelRecordService.insertRecord(waterLevelRecord);
