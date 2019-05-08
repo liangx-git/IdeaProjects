@@ -1,6 +1,7 @@
 package com.liangx.spring.kafka;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
+import com.liangx.spring.kafka.services.RealMonitorService.RealMonitorService;
 import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.producer.KafkaProducer;
 import org.junit.Test;
@@ -169,6 +170,8 @@ public class KafkaApplicationTests {
        boolean gt = timestamp1.getTime() == timestamp2.getTime() + 10000;
        System.out.println("timestamp1 = " + timestamp1 + " timestamp2 = " + timestamp2);
        System.out.println("timestamp1 == timestamp2 + 10000 = " + gt);
+
+
 
     }
 }

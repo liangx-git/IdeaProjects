@@ -3,7 +3,7 @@ package com.liangx.spring.kafka.services.BackTrackingService;
 import com.liangx.spring.kafka.common.MessageEntity;
 import com.liangx.spring.kafka.common.ServiceType;
 import com.liangx.spring.kafka.config.GeneralConsumerConfig;
-import com.liangx.spring.kafka.utils.UserSessionUtil;
+import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,16 +13,7 @@ import java.util.concurrent.*;
 
 @Component()
 @Slf4j
-public class BackTrackingServiceManager {
-
-    //创建线程池
-//    private ExecutorService executor = Executors.newCachedThreadPool();
-    private ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            4,
-            10,
-            200,
-            TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(5));
+public class BackTrackingService {
 
     //真正执行数据回溯服务的线程本体
     @Autowired
@@ -30,11 +21,19 @@ public class BackTrackingServiceManager {
 
     //用于BackTrackingTask线程运行期间获取用户提交的数据
     @Autowired
-    private UserSessionUtil userSessionUtil;
+    private UserSessionManager userSessionManager;
 
     //用于BackTrackingKafkaTask线程中实例化consumer进程
     @Autowired
     private GeneralConsumerConfig generalConsumerConfig;
+
+    //创建线程池
+    private ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            4,
+            10,
+            200,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(5));
 
     //请求了BackTracking服务的用户都会把sessionId注册到此
     private List<String> registryTables = new ArrayList<>();
@@ -63,7 +62,7 @@ public class BackTrackingServiceManager {
         stopBackTrackingListener(userSessionId);
 
         //通知前端关闭BackTrackingService
-        userSessionUtil.setUserSessionMessageEntity(
+        userSessionManager.setUserSessionMessageEntity(
                 userSessionId,
                 new MessageEntity(MessageEntity.BACK_TRACKING_DONE),
                 true);
@@ -77,7 +76,7 @@ public class BackTrackingServiceManager {
     private void startBackTrackingListener(String userSessionId){
 
         //将sessionId注册到BackTrackingService中
-        registryTables.add(userSessionId);
+//        registryTables.add(userSessionId);
 
         backTrackingKafkaTask.addUserSession(userSessionId);
         executor.execute(backTrackingKafkaTask);
@@ -97,10 +96,10 @@ public class BackTrackingServiceManager {
                 iter.remove();
 
                 //取消当前用户对BackTrackingService的订阅，并订阅RealMonitorService
-                int service = userSessionUtil.getSubscribedServices(userSessionId);
+                int service = userSessionManager.getSubscribedServices(userSessionId);
                 service &= ~ServiceType.BACK_TRACKING_SERVICE;  //取消订阅BackTrackingService
                 service |= ServiceType.REAL_MONITOR_SERVICE;    //订阅RealMonitorService
-                userSessionUtil.subscribeService(userSessionId, service);
+                userSessionManager.subscribeService(userSessionId, service);
             }
         }
     }
@@ -118,5 +117,6 @@ public class BackTrackingServiceManager {
         }
         return false;
     }
+
 
 }

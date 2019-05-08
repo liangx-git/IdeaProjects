@@ -32,11 +32,4 @@ public class MainController{
         return model;
     }
 
-    @RequestMapping("/testmonitor")
-    public ModelAndView testmonitor(){
-        ModelAndView model = new ModelAndView();
-        model.setViewName("testmonitor.html");
-        return model;
-    }
-
 }

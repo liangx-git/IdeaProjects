@@ -1,10 +1,11 @@
-package com.liangx.spring.kafka.utils;
+package com.liangx.spring.kafka.services.UserSessionManager;
 
 import com.liangx.spring.kafka.common.MessageEntity;
 import com.liangx.spring.kafka.common.ServiceType;
-import com.liangx.spring.kafka.services.BackTrackingService.BackTrackingServiceManager;
-import com.liangx.spring.kafka.services.RealMonitorService.WebKafkaConsumer;
-import com.liangx.spring.kafka.services.ScheduledMonitorSerive.WebSchedule;
+import com.liangx.spring.kafka.services.BackTrackingService.BackTrackingService;
+import com.liangx.spring.kafka.services.RealMonitorService.RealMonitorService;
+import com.liangx.spring.kafka.services.ScheduledMonitorSerive.ScheduledMonitorService;
+import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,19 +41,19 @@ class UserSessionInformation{
  */
 @Component
 @Slf4j
-public class UserSessionUtil {
+public class UserSessionManager {
 
     @Autowired
-    private WebKafkaConsumer webKafkaConsumer;
-
-//    @Autowired
-//    private PreparedBufferUtil preparedBufferUtil;
+    private RealMonitorService realMonitorService;
 
     @Autowired
-    private WebSchedule webSchedule;
+    private PreparedBufferUtil preparedBufferUtil;
 
     @Autowired
-    private BackTrackingServiceManager backTrackingServiceManager;
+    private ScheduledMonitorService scheduledMonitorService;
+
+    @Autowired
+    private BackTrackingService backTrackingService;
 
 
     //保存所有注册的session信息,以及session请求的服务
@@ -70,9 +71,8 @@ public class UserSessionUtil {
     public synchronized void register(Session userSession, int service){
         userSessions.add(userSession);
         subscribeService(userSession.getId(), service);
-        log.info("[ UserSessionUtil ] : user session(" + userSession.getId() + ") register, current user number: (" + userSessions.size() + ")");
+        log.info("[ UserSessionManager ] : user session(" + userSession.getId() + ") register, current user number: (" + userSessions.size() + ")");
     }
-
 
     /**默认注册的session不订阅服务(NO_SERVICE)
      * @param userSession
@@ -91,7 +91,7 @@ public class UserSessionUtil {
         if (userSession != null){   //清除userSessions和userSessionInformationMap中和userSessionId相关的信息
             userSessions.remove(userSession);
             userSessionInformationMap.remove(userSessionId);
-            log.info("[ UserSessionUtil ] : user session(" + userSessionId + ") unregister, current user number: (" + userSessions.size() + ")");
+            log.info("[ UserSessionManager ] : user session(" + userSessionId + ") unregister, current user number: (" + userSessions.size() + ")");
         }
     }
 
@@ -119,7 +119,9 @@ public class UserSessionUtil {
 
     }
 
+
     private void updateUserSessionSubscribedServices(String userSessionId, int services){
+
         //获取userSessionId对应的UserSessionInformation
         UserSessionInformation userSessionInformation = userSessionInformationMap.get(userSessionId);
         if (userSessionInformation == null){
@@ -131,6 +133,7 @@ public class UserSessionUtil {
         userSessionInformationMap.put(userSessionId, userSessionInformation);
     }
 
+
     /**
      * 执行userSessionId订阅的服务（services）开启所需的操作
      * @param userSessionId
@@ -140,22 +143,22 @@ public class UserSessionUtil {
 
         //开启RealMonitorService
         if ((services & ServiceType.REAL_MONITOR_SERVICE) != 0){
-            webKafkaConsumer.startRealMonitorServiceForUserSession(userSessionId);
+            realMonitorService.startRealMonitorServiceForUserSession(userSessionId);
         }
 
         //开启DailyMonitorService
         if ((services & ServiceType.DAILY_MONITOR_SERVICE) != 0){
-            webSchedule.startDailyMonitorServieForUserSession(userSessionId);
+            scheduledMonitorService.startDailyMonitorServieForUserSession(userSessionId);
         }
 
         //开启WeeklyMonitorService
         if ((services & ServiceType.WEEKLY_MONITOR_SERVICE) != 0){
-            webSchedule.startWeeklyMonitorServiceForUserSession(userSessionId);
+            scheduledMonitorService.startWeeklyMonitorServiceForUserSession(userSessionId);
         }
 
         //开启BackTrackingService
         if ((services & ServiceType.BACK_TRACKING_SERVICE) != 0){
-            backTrackingServiceManager.startBackTrackingService(userSessionId);
+            backTrackingService.startBackTrackingService(userSessionId);
         }
     }
 
@@ -170,22 +173,22 @@ public class UserSessionUtil {
 
         //取消订阅RealMonitorService
         if ((services & ServiceType.REAL_MONITOR_SERVICE) != 0){
-            webKafkaConsumer.stopRealMonitorServiceForUserSession(userSessionId);
+            realMonitorService.stopRealMonitorServiceForUserSession(userSessionId);
         }
 
         //取消订阅了DailyMonitorService
         if ((services & ServiceType.DAILY_MONITOR_SERVICE) != 0){
-            webSchedule.stopDailyMonitorServieForUserSession(userSessionId);
+            scheduledMonitorService.stopDailyMonitorServieForUserSession(userSessionId);
         }
 
         //取消订阅了WeeklyMonitorService
         if ((services & ServiceType.WEEKLY_MONITOR_SERVICE) != 0){
-            webSchedule.stopWeeklyMonitorServiceForUserSession(userSessionId);
+            scheduledMonitorService.stopWeeklyMonitorServiceForUserSession(userSessionId);
         }
 
         //取消订阅了BackTrackingService
         if ((services & ServiceType.BACK_TRACKING_SERVICE) != 0){
-            backTrackingServiceManager.stopBackTrackingService(userSessionId);
+            backTrackingService.stopBackTrackingService(userSessionId);
         }
     }
 

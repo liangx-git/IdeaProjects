@@ -2,7 +2,6 @@ package com.liangx.spring.kafka.services.DurableListenerService;
 
 import com.liangx.spring.kafka.common.SiteInformation;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
-import com.liangx.spring.kafka.services.MyKafkaConsumer;
 import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,14 +12,13 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class DurableKafkaConsumer implements MyKafkaConsumer {
+public class DurableKafkaConsumer {
 
 //    private int count = 0;
     private double averageHourlyWaterLevel = 0;
@@ -28,9 +26,6 @@ public class DurableKafkaConsumer implements MyKafkaConsumer {
     private int averageHourlyCount = 0;
 
     private Timer timer;
-
-//    @Autowired
-//    private SiteInformation siteInformation;
 
     //持久层服务
     @Autowired
@@ -48,15 +43,6 @@ public class DurableKafkaConsumer implements MyKafkaConsumer {
                     }
                 }, 0, 60 * 60, TimeUnit.SECONDS);
 
-
-//        timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                log.info("[ DurableKafkaConsumer ] : 执行定时任务（storingDatasAtWholePoint）");
-//                storingDatasAtWholePoint();
-//            }
-//        }, 0, 60 * 1000);
         log.info("[ DurableKafkaConsumer ] : 启动定时任务（storingDatasAtWholePoint）");
 
     }

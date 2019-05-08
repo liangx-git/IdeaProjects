@@ -6,7 +6,7 @@ import com.liangx.spring.kafka.common.SiteInformation;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
-import com.liangx.spring.kafka.utils.UserSessionUtil;
+import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,13 +22,13 @@ import java.util.List;
  */
 @Component
 @Slf4j
-public class WebSchedule {
+public class ScheduledMonitorService {
 
     @Autowired
     private WaterLevelRecordService waterLevelRecordService;
 
     @Autowired
-    private UserSessionUtil userSessionUtil;
+    private UserSessionManager userSessionManager;
 
     @Autowired
     private PreparedBufferUtil preparedBufferUtil;
@@ -61,7 +61,7 @@ public class WebSchedule {
         List<WaterLevelRecord>  hourlyBuffer = preparedBufferUtil.getHourlyBuffer();
         if (!hourlyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.DAILY_MONITOR, hourlyBuffer);
-            userSessionUtil.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
+            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
         }
     }
 
@@ -73,7 +73,7 @@ public class WebSchedule {
     public void stopDailyMonitorServieForUserSession(String userSessionId){
 
         //最后一个UserSesson取消订阅DailyMonitorService时关闭服务
-        if(userSessionUtil.noUserSessionSubscribedService(ServiceType.DAILY_MONITOR_SERVICE)){
+        if(userSessionManager.noUserSessionSubscribedService(ServiceType.DAILY_MONITOR_SERVICE)){
             dailyMonitorScheduleIsStarted = false;
         }
     }
@@ -98,7 +98,7 @@ public class WebSchedule {
         List<WaterLevelRecord>  weeklyBuffer = preparedBufferUtil.getWeeklyBuffer();
         if (!weeklyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.WEEKLY_MONITOR, weeklyBuffer);
-            userSessionUtil.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
+            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
         }
     }
 
@@ -110,7 +110,7 @@ public class WebSchedule {
     public void stopWeeklyMonitorServiceForUserSession(String userSessionId){
 
         //最后一个UserSesson取消订阅WeekyMonitorService时关闭服务
-        if(userSessionUtil.noUserSessionSubscribedService(ServiceType.WEEKLY_MONITOR_SERVICE)){
+        if(userSessionManager.noUserSessionSubscribedService(ServiceType.WEEKLY_MONITOR_SERVICE)){
             weeklyMonitorScheduleIsStarted = false;
         }
     }
@@ -140,7 +140,7 @@ public class WebSchedule {
         );
 
         //给所有订阅了DailyMonitorService用户发送数据
-        List<String> sessionIds = userSessionUtil.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
+        List<String> sessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
         sendMessageEntityToAllSubscribedSessions(sessionIds, messageEntity);
     }
 
@@ -165,7 +165,7 @@ public class WebSchedule {
         );
 
         //给所有订阅了WeeklyMonitorService的用户发送数据
-        List<String> sessionIds = userSessionUtil.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
+        List<String> sessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
         sendMessageEntityToAllSubscribedSessions(sessionIds, messageEntity);
     }
 
@@ -185,7 +185,7 @@ public class WebSchedule {
     private void sendMessageEntityToAllSubscribedSessions(List<String> userSessionIds, MessageEntity messageEntity){
         //给所有用户发送数据
         for (String userSessionId : userSessionIds){
-           userSessionUtil.setUserSessionMessageEntity(userSessionId, messageEntity, true);
+           userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);
             log.info("[ WebScheduleService ] :更新session(" + userSessionId + ")的" + messageEntity.getRequestType() +" Chart" );
         }
     }
