@@ -457,6 +457,9 @@ function ws() {
             }else if (datas[0] === "back_tracking_done"){
                 //后台的BackTrackingListener关闭时，将chart-slider滑快位置初始化为最右端
                 resetSlider();
+
+                //订阅realMonitorService
+                socket.send(JSON.stringify(["subscribe_real_monitor_service"]));
             } else{
                 alert("error(reponsetype = " + datas[0] + ")");
             }
@@ -470,10 +473,12 @@ function ws() {
             socket.send(JSON.stringify(["subscribe_real_monitor_service"]));
 
             //订阅日监控
-            socket.send(JSON.stringify(["subscribe_daily_monitor_service"]));
+            // socket.send(JSON.stringify(["subscribe_daily_monitor_service"]));
 
             //订阅周监控预
-            socket.send(JSON.stringify(["subscribe_weekly_monitor_service"]));
+            // socket.send(JSON.stringify(["subscribe_weekly_monitor_service"]));
+
+            socket.send(JSON.stringify(["subscribe_scheduled_monitor_service"]));
 
         };
 

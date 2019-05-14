@@ -17,7 +17,7 @@ import java.util.*;
 
 @Component("backTrackingKafkaConsumer")
 @Slf4j
-public class BackTrackingKafkaTask implements Runnable{
+public class BackTrackingTask implements Runnable{
 
     @Autowired
     private UserSessionManager userSessionManager;
@@ -71,7 +71,7 @@ public class BackTrackingKafkaTask implements Runnable{
 
                 //设置用户下次操作超时时间
                 Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.SECOND, 30);
+                calendar.add(Calendar.SECOND, 10);
                 stopTimeInMillis = calendar.getTimeInMillis();
            }
            else{    //轮询查看Session状态
@@ -93,7 +93,7 @@ public class BackTrackingKafkaTask implements Runnable{
                consumer.close();
 
                //BackTrackingServiceManager，当前session结束BackTrackingListener服务
-               backTrackingService.stopBackTrackingListener(userSessionId);
+               backTrackingService.unsubscribe(userSessionId);
                break;
            }
         }

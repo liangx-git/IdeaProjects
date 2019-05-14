@@ -25,11 +25,4 @@ public class MainController{
         return model;
     }
 
-    @RequestMapping("/hourlymonitor")
-    public ModelAndView hourlyMonitor(){
-        ModelAndView model = new ModelAndView();
-        model.setViewName("hourlymonitor.html");
-        return model;
-    }
-
 }

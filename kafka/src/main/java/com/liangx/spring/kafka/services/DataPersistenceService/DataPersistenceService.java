@@ -1,4 +1,4 @@
-package com.liangx.spring.kafka.services.DurableListenerService;
+package com.liangx.spring.kafka.services.DataPersistenceService;
 
 import com.liangx.spring.kafka.common.SiteInformation;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
@@ -18,53 +18,39 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class DurableKafkaConsumer {
+public class DataPersistenceService {
 
-//    private int count = 0;
     private double averageHourlyWaterLevel = 0;
 
     private int averageHourlyCount = 0;
 
-    private Timer timer;
+    private Timer timer = new Timer();
+
+    private ScheduledExecutorService scheduledExecutorService;
 
     //持久层服务
     @Autowired
     private WaterLevelRecordService waterLevelRecordService;
 
-    public DurableKafkaConsumer(){
+    public DataPersistenceService(){
 
         //没小时保存一次平均水位
-        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(
                 new Runnable() {
                     @Override
                     public void run() {
                        storingDatasAtWholePoint();
                     }
-                }, 0, 60 * 60, TimeUnit.SECONDS);
+                }, 0, 1, TimeUnit.MINUTES);
 
         log.info("[ DurableKafkaConsumer ] : 启动定时任务（storingDatasAtWholePoint）");
-
     }
 
-    @KafkaListener(id = "durableListener", clientIdPrefix = "durable", topics = "${kafka.consumer.topic}", containerFactory = "batchKafkaListenerContainerFactory")
-    public void durableListener(List<ConsumerRecord<String, WaterLevelRecord>> consumerRecords){
 
-        updateSiteInformationIfDiff(consumerRecords.get(0).value());
-
-        updateAverageHourWaterLevelAndAverageHourlyCount(consumerRecords);
-    }
-
-    private void updateSiteInformationIfDiff(WaterLevelRecord waterLevelRecord){
-        int siteId = waterLevelRecord.getSiteId();
-        String siteName = waterLevelRecord.getSiteName();
-
-        if (SiteInformation.siteId == 0 || SiteInformation.siteId != siteId){
-            SiteInformation.siteId = siteId;
-            SiteInformation.siteName =siteName;
-        }
-    }
-
+    /**
+     * 定时任务，将平均水位信息存储到持久层
+     */
     private void storingDatasAtWholePoint(){
         DecimalFormat df = new DecimalFormat("0.0");
         if (averageHourlyWaterLevel != 0){
@@ -80,6 +66,28 @@ public class DurableKafkaConsumer {
             averageHourlyCount = 0;
         }
     }
+
+
+
+    @KafkaListener(id = "durableListener", clientIdPrefix = "durable", topics = "${kafka.consumer.topic}", containerFactory = "batchKafkaListenerContainerFactory")
+    public void durableListener(List<ConsumerRecord<String, WaterLevelRecord>> consumerRecords){
+
+        updateSiteInformationIfDiff(consumerRecords.get(0).value());
+
+        updateAverageHourWaterLevelAndAverageHourlyCount(consumerRecords);
+    }
+
+
+    private void updateSiteInformationIfDiff(WaterLevelRecord waterLevelRecord){
+        int siteId = waterLevelRecord.getSiteId();
+        String siteName = waterLevelRecord.getSiteName();
+
+        if (SiteInformation.siteId == 0 || SiteInformation.siteId != siteId){
+            SiteInformation.siteId = siteId;
+            SiteInformation.siteName =siteName;
+        }
+    }
+
 
     private void updateAverageHourWaterLevelAndAverageHourlyCount(List<ConsumerRecord<String, WaterLevelRecord>> consumerRecords){
         for(ConsumerRecord<String, WaterLevelRecord> consumerRecord : consumerRecords){

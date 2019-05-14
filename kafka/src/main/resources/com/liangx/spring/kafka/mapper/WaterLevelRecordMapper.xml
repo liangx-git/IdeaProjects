@@ -4,7 +4,7 @@
 
     <!-- 返回类型模式 -->
     <resultMap type="com.liangx.spring.kafka.common.WaterLevelRecord" id="waterlevelRecordResult" >
-        <result column="time" jdbcType="TIMESTAMP" property="time" />
+        <result column="generate_time" jdbcType="TIMESTAMP" property="time" />
         <!--<result column="id" jdbcType="INTEGER" property="id" />-->
         <result column="site_id" jdbcType="INTEGER" property="siteId" />
         <result column="site_name" jdbcType="VARCHAR" property="siteName" />
@@ -12,8 +12,8 @@
     </resultMap>
 
     <!-- 单条记录插入 -->
-    <insert id="insertRecord" parameterType="com.liangx.spring.kafka.common.WaterLevelRecord" keyProperty="time">
-        INSERT INTO waterlevel_information(time, site_id, site_name, water_level)
+    <insert id="insertRecord" parameterType="com.liangx.spring.kafka.common.WaterLevelRecord">
+        INSERT INTO water_level_records(generate_time, site_id, site_name, water_level)
         <if test="time != null and siteId != null and siteName != null and waterLevel != null">
           VALUES(#{time}, #{siteId}, #{siteName}, #{waterLevel})
         </if>
@@ -21,7 +21,7 @@
 
     <!--批量记录插入 -->
     <insert id="insertRecords" parameterType="com.liangx.spring.kafka.common.WaterLevelRecord">
-          INSERT INTO waterlevel_information(time, site_id, site_name, water_level)
+          INSERT INTO water_level_records(generate_time, site_id, site_name, water_level)
             VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (#{item.time}, #{item.siteId}, #{item.siteName}, #{item.waterLevel})
@@ -42,9 +42,9 @@
 
     <!-- 查询时间在beginTime到endTime之间的数据，COALESCE（）表示当查询结果为null时返回0 -->
     <select id="getAvgWaterLevelByInterval" parameterType="java.sql.Timestamp" resultType="java.lang.Double">
-        SELECT COALESCE(AVG(water_level), 0) FROM waterlevel_information WHERE
+        SELECT COALESCE(AVG(water_level), 0) FROM water_level_records WHERE
         <if test="beginTime != null and endTime != null">
-          time >= #{beginTime} AND time  &lt; #{endTime}
+          generate_time >= #{beginTime} AND generate_time  &lt; #{endTime}
         </if>
     </select>
 

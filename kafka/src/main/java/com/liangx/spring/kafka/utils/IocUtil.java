@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * 通过该类中的静态方法可以获取IoC容器
  */
 @Component
-public class ApplicationContextUtil implements ApplicationContextAware {
+public class IocUtil implements ApplicationContextAware {
 
     private static ApplicationContext applicationContext;
     @Override

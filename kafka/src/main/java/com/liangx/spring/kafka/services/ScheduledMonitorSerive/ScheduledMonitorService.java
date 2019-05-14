@@ -1,9 +1,9 @@
 package com.liangx.spring.kafka.services.ScheduledMonitorSerive;
 
 import com.liangx.spring.kafka.common.MessageEntity;
-import com.liangx.spring.kafka.common.ServiceType;
 import com.liangx.spring.kafka.common.SiteInformation;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
+import com.liangx.spring.kafka.services.BaseService.BaseService;
 import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
@@ -20,9 +20,9 @@ import java.util.List;
 /**
  * 定时发送数据到前端
  */
-@Component
+@Component("scheduledMonitorService")
 @Slf4j
-public class ScheduledMonitorService {
+public class ScheduledMonitorService extends BaseService {
 
     @Autowired
     private WaterLevelRecordService waterLevelRecordService;
@@ -38,26 +38,53 @@ public class ScheduledMonitorService {
 
     private boolean weeklyMonitorScheduleIsStarted = false;
 
+    private boolean scheduledMonitorServiceIsStarted = false;
 
-    /**
-     * 为userSessionId开启DailyMonitor服务
-     * @param userSessionId
-     */
-    public void startDailyMonitorServieForUserSession(String userSessionId){
 
-        //发送预缓存
-        sendDailyMonitorPreparedBuffer(userSessionId);
-        log.info("[ DailyMonitorService ] : 发送hourly preparedBuffer");
+    @Override
+    public void subscribe(String userSessionId) {
 
-        //开启定时刷新服务
-        dailyMonitorScheduleIsStarted = true;
+        //如果用户发起请求时服务未启动，则启动
+        if (!scheduledMonitorServiceIsStarted) {
+            scheduledMonitorServiceIsStarted = true;
+            log.info("[ ScheduledMonitorService ] : 开启服务");
+        }
+
+        //新增用户注册到服务中
+        if (!isRegistered(userSessionId)){
+            register(userSessionId);
+            log.info("[ ScheduledMonitorService ] : UserSession(" + userSessionId + ")订阅服务成功");
+
+            //对新订阅用户发送表格预缓存数据
+            sendDailyMonitorPreparedBuffer(userSessionId);
+            sendWeeklyMonitorPreparedBuffer(userSessionId);
+            log.info("[ ScheduledMonitorService ] : 发送表格预缓存数据");
+        }
     }
+
+    @Override
+    public void unsubscribe(String userSessionId) {
+
+        //当最后一个用户取消订阅时关闭服务
+        if (noUserRegistered()){
+            scheduledMonitorServiceIsStarted = false;
+            log.info("[ ScheduledMonitorService ] : 关闭服务");
+        }
+
+        //将用户从服务中注销
+        if (isRegistered(userSessionId)){
+            unregister(userSessionId);
+            log.info("[ ScheduledMonitorService ] : UserSession(" + userSessionId + ")取消订阅服务");
+        }
+    }
+
 
     /**
      * 如果DailyMonitorService预缓存可用，则在服务启动时发送给前端
      * @param userSessionId
      */
     private void sendDailyMonitorPreparedBuffer(String userSessionId){
+        log.info("[ ScheduledMonitorService ] : 发送DilyMonitor表格预缓存数据");
         List<WaterLevelRecord>  hourlyBuffer = preparedBufferUtil.getHourlyBuffer();
         if (!hourlyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.DAILY_MONITOR, hourlyBuffer);
@@ -66,52 +93,12 @@ public class ScheduledMonitorService {
     }
 
 
-    /**
-     *取消订阅了DailyMonitorService
-     * @param userSessionId
-     */
-    public void stopDailyMonitorServieForUserSession(String userSessionId){
-
-        //最后一个UserSesson取消订阅DailyMonitorService时关闭服务
-        if(userSessionManager.noUserSessionSubscribedService(ServiceType.DAILY_MONITOR_SERVICE)){
-            dailyMonitorScheduleIsStarted = false;
-        }
-    }
-
-
-    /**
-     * 为userSessionId开启WeeklyMonitor服务
-     * @param userSessionId
-     */
-    public void startWeeklyMonitorServiceForUserSession(String userSessionId){
-
-        //发送预缓存
-        sendWeeklyMonitorPreparedBuffer(userSessionId);
-        log.info("[ WeeklyMonitorService ] : 发送weekly preparedBuffer");
-
-        //开启定时刷新任务
-        weeklyMonitorScheduleIsStarted = true;
-
-    }
-
     private void sendWeeklyMonitorPreparedBuffer(String userSessionId){
+        log.info("[ ScheduledMonitorService ] : 发送WeeklyMonitor表格预缓存数据");
         List<WaterLevelRecord>  weeklyBuffer = preparedBufferUtil.getWeeklyBuffer();
         if (!weeklyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.WEEKLY_MONITOR, weeklyBuffer);
             userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
-        }
-    }
-
-
-    /**
-     *取消订阅了WeeklyMonitorService
-     * @param userSessionId
-     */
-    public void stopWeeklyMonitorServiceForUserSession(String userSessionId){
-
-        //最后一个UserSesson取消订阅WeekyMonitorService时关闭服务
-        if(userSessionManager.noUserSessionSubscribedService(ServiceType.WEEKLY_MONITOR_SERVICE)){
-            weeklyMonitorScheduleIsStarted = false;
         }
     }
 
@@ -123,7 +110,7 @@ public class ScheduledMonitorService {
     @Scheduled(cron = "0 0 * ? * ?")
     private void SendHourlyRecords() throws IOException {
 
-        if (!dailyMonitorScheduleIsStarted){    //当dailyMonitorScheduleIsStarted为true时服务启动
+        if (!scheduledMonitorServiceIsStarted){
             return;
         }
 
@@ -140,15 +127,14 @@ public class ScheduledMonitorService {
         );
 
         //给所有订阅了DailyMonitorService用户发送数据
-        List<String> sessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
-        sendMessageEntityToAllSubscribedSessions(sessionIds, messageEntity);
+        broadcastMessage(messageEntity);
     }
 
     //每天00:00更新
     @Scheduled(cron = "0 0 0 * * ?")
     private void SendDailyRecords() throws IOException {
 
-        if (!weeklyMonitorScheduleIsStarted){   //当weeklyMonitorScheduleIsStarted为true时服务启动
+        if (!scheduledMonitorServiceIsStarted){
             return;
         }
 
@@ -165,8 +151,7 @@ public class ScheduledMonitorService {
         );
 
         //给所有订阅了WeeklyMonitorService的用户发送数据
-        List<String> sessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.WEEKLY_MONITOR_SERVICE);
-        sendMessageEntityToAllSubscribedSessions(sessionIds, messageEntity);
+        broadcastMessage(messageEntity);
     }
 
 
@@ -182,11 +167,14 @@ public class ScheduledMonitorService {
         return waterLevelRecordService.getAvgWaterLevelByInterval(beginTime, endTime);
     }
 
-    private void sendMessageEntityToAllSubscribedSessions(List<String> userSessionIds, MessageEntity messageEntity){
-        //给所有用户发送数据
-        for (String userSessionId : userSessionIds){
-           userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);
-            log.info("[ WebScheduleService ] :更新session(" + userSessionId + ")的" + messageEntity.getRequestType() +" Chart" );
+
+    private void broadcastMessage(MessageEntity messageEntity){
+        List<String> registeredUserSessionIds = getRegisteredUserSessionIds();
+        for (String userSessionId : registeredUserSessionIds){
+            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);
+            log.info("[ ScheduleMonitorService ] :更新session(" + userSessionId + ")的" + messageEntity.getRequestType() +" Chart" );
         }
     }
+
+
 }

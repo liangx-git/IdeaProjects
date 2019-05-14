@@ -3,6 +3,7 @@ package com.liangx.spring.kafka.services.RealMonitorService;
 import com.liangx.spring.kafka.common.MessageEntity;
 import com.liangx.spring.kafka.common.ServiceType;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
+import com.liangx.spring.kafka.services.BaseService.BaseService;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component
+@Component("realMonitorService")
 @Slf4j
-public class RealMonitorService {
+public class RealMonitorService extends BaseService{
 
    //使用registry对象控制监听器的启动
     @Autowired
@@ -29,8 +30,40 @@ public class RealMonitorService {
     @Autowired
     private PreparedBufferUtil preparedBufferUtil;
 
-    @Autowired
-    private KafkaListenerContainerFactory kafkaListenerContainerFactory;
+
+    @Override
+    public void subscribe(String userSessionId) {
+
+        //当KafkaConsumer线程未启动时启动
+        if (!listenerIsWorking()){
+            startWebListener();
+            log.info("[ RealMonitorService ] : 启动RealMonitorService");
+        }
+
+        if (!isRegistered(userSessionId)){
+            register(userSessionId);
+            log.info("[ RealMonitorService ] : UserSession(" + userSessionId + ")订阅服务成功");
+
+            //对刚请求用户发送预缓存
+            sendRealMonitorPreparedBuffer(userSessionId);
+        }
+    }
+
+
+    @Override
+    public void unsubscribe(String userSessionId){
+
+        //的那个没有用户订阅服务时关闭服务
+        if (noUserRegistered()){
+            stopWebListener();
+            log.info("[ RealMonitorService ] : 关闭RealMonitorService");
+        }
+
+        if (isRegistered(userSessionId)){
+            unregister(userSessionId);
+            log.info("[ RealMonitorService ] : UserSession(" + userSessionId + ")取消订阅服务成功");
+        }
+    }
 
 
     @KafkaListener(id="webListener", clientIdPrefix="web", topics="${kafka.consumer.topic}", containerFactory="webKafkaListenerContainerFactory")
@@ -50,7 +83,8 @@ public class RealMonitorService {
         MessageEntity message = new MessageEntity(MessageEntity.REAL_MONITOR, consumerRecord.value());
 
         //对订阅了RealMonitorListener的用户session发送实时记录
-        List<String> userSessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.REAL_MONITOR_SERVICE);
+//        List<String> userSessionIds = userSessionManager.getSubcribedServicesUserSessionIds(ServiceType.REAL_MONITOR_SERVICE);
+        List<String> userSessionIds = getRegisteredUserSessionIds();
         for (String userSessionId : userSessionIds){
             userSessionManager.setUserSessionMessageEntity(userSessionId, message, true);
             log.info("[ RealMonitorService ] : consumer(" + Thread.currentThread().getName() + ")给用户session(" + userSessionId + ")发送数据");
@@ -61,28 +95,28 @@ public class RealMonitorService {
      * 为userSession开启RealMonitor服务
      * @param userSessionId
      */
-    public void startRealMonitorServiceForUserSession(String userSessionId){
-        //启动RealMonitor前，发送预缓存
-        sendRealMonitorPreparedBuffer(userSessionId);
-
-        //当WebKafkaConsumer中的Listener线程未启动时启动
-        if (!listenerIsWorking()){
-            startWebListener();
-        }
-    }
+//    public void startRealMonitorServiceForUserSession(String userSessionId){
+//        //启动RealMonitor前，发送预缓存
+//        sendRealMonitorPreparedBuffer(userSessionId);
+//
+//        //当WebKafkaConsumer中的Listener线程未启动时启动
+//        if (!listenerIsWorking()){
+//            startWebListener();
+//        }
+//    }
 
 
     /**
      *取消订阅RealMonitorService
      * @param userSessionId
      */
-    public void stopRealMonitorServiceForUserSession(String userSessionId) {
-
-        //当前取消订阅的UserSession为最后一个时，真正关闭(暂停)RealMonitorService服务
-        if (userSessionManager.noUserSessionSubscribedService(ServiceType.REAL_MONITOR_SERVICE)){
-            stopWebListener();
-        }
-    }
+//    public void stopRealMonitorServiceForUserSession(String userSessionId) {
+//
+//        //当前取消订阅的UserSession为最后一个时，真正关闭(暂停)RealMonitorService服务
+//        if (userSessionManager.noUserSessionSubscribedService(ServiceType.REAL_MONITOR_SERVICE)){
+//            stopWebListener();
+//        }
+//    }
 
 
     private void sendRealMonitorPreparedBuffer(String userSessionId){
@@ -98,10 +132,7 @@ public class RealMonitorService {
     private boolean recordExpired(WaterLevelRecord record){
         long timeMillis = record.getTime().getTime();
         long nowTimeMills = System.currentTimeMillis();
-        if (timeMillis + 6 * 1000 < nowTimeMills){
-            return true;
-        }
-        return false;
+        return (timeMillis + 6 * 1000 < nowTimeMills);
     }
 
 
@@ -139,6 +170,5 @@ public class RealMonitorService {
         return registry.getListenerContainer("webListener").isRunning()
                 && !registry.getListenerContainer("webListener").isPauseRequested();
     }
-
 
 }
