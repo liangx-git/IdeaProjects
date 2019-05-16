@@ -32,12 +32,6 @@ public class ServicesManager {
     }
 
 
-    public void unregisterService(String serviceName){
-        if (services.containsValue(serviceName)){
-            services.remove(serviceName);
-        }
-    }
-
 
     public void subscribeService(String userSessionId, String serviceType){
         String serviceName = services.get(serviceType);
@@ -46,10 +40,12 @@ public class ServicesManager {
     }
 
 
-    public void unsubscribeService(String userSessionId, String serviceType){
-        String serviceName = services.get(serviceType);
-        BaseService serviceInstance = getServiceInstanceFromIoc(serviceName);
-        serviceInstance.unsubscribe(userSessionId);
+    public void unsubscribeAllService(String userSessionId){
+        for (String serviceName : services.values()){
+            BaseService serviceInstance = getServiceInstanceFromIoc(serviceName);
+            serviceInstance.unsubscribe(userSessionId);
+        }
+
     }
 
 

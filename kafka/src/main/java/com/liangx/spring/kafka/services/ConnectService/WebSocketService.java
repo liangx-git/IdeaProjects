@@ -67,42 +67,6 @@ public class WebSocketService {
             servicesManager.subscribeService(session.getId(), type);
         }
 
-
-//        switch (type){
-//            case MessageEntity.SUBSCRIBE_REAL_MONITOR_SERVICE :   //请求实时监控数据
-//            {
-//                userManager.subscribeService_(session.getId(), "realMonitorService");
-//                break;
-//            }
-//            case MessageEntity.SUBSCRIBE_BACK_TRACKING_SERVICE :
-//            {
-//                userManager.unsubscribeService_(session.getId(), "realMonitorService");
-//                userManager.subscribeService_(session.getId(), "backTrackingService");
-//                break;
-//            }
-//            case MessageEntity.BACK_TRACKING :  //请求回溯监控数据
-//            {
-//                //保存用户请求
-//                userManager.setUserSessionMessageEntity(
-//                        session.getId(),
-//                        new MessageEntity(MessageEntity.BACK_TRACKING,
-//                                (long)msgArray.get(1))     //请求的时间戳
-//                );
-//                break;
-//            }
-//            case MessageEntity.UNSUBSCRIBE_BACK_TRACKING_SERVICE :     //取消订阅BackTrackingService，重新加入RealMonitorService
-//            {
-//                userManager.unsubscribeService_(session.getId(), "backTrackingService");
-//                userManager.subscribeService_(session.getId(), "realMonitorService");
-//                break;
-//            }
-//            case MessageEntity.SUBSCRIBE_SCHEDULED_MONITOR_SERVICE : //订阅周监控缓服务
-//            {
-//                userManager.subscribeService_(session.getId(), "scheduledMonitorService");
-//                break;
-//            }
-//        }
-
     }
 
 

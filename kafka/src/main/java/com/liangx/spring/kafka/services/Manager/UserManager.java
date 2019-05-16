@@ -1,11 +1,6 @@
 package com.liangx.spring.kafka.services.Manager;
 
 import com.liangx.spring.kafka.common.MessageEntity;
-import com.liangx.spring.kafka.services.BackTrackingService.BackTrackingService;
-import com.liangx.spring.kafka.services.BaseService.BaseService;
-import com.liangx.spring.kafka.services.RealMonitorService.RealMonitorService;
-import com.liangx.spring.kafka.services.ScheduledMonitorSerive.ScheduledMonitorService;
-import com.liangx.spring.kafka.utils.IocUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,32 +19,10 @@ import java.util.*;
 public class UserManager {
 
     @Autowired
-    private RealMonitorService realMonitorService;
-
-
-    @Autowired
-    private ScheduledMonitorService scheduledMonitorService;
-
-    @Autowired
-    private BackTrackingService backTrackingService;
-
-    @Autowired
     private ServicesManager servicesManager;
-
 
     private List <Session> userSessions = new ArrayList<>();    //保存所有注册的session信息,以及session请求的服务
     private Map<String, MessageEntity> userSessionInformationMap = new HashMap<>();
-
-    private List<String> services = new ArrayList<>();
-
-    public UserManager(){
-
-        //经响应用户请求的服务注册到UserSessionManager
-        services.add("realMonitorService");
-        services.add("scheduledMonitorService");
-        services.add("backTrackingService");
-
-    }
 
 
     /**
@@ -74,50 +47,10 @@ public class UserManager {
             userSessionInformationMap.remove(userSessionId);
 
             //注销userSessionId订阅的所有服务
-            unsubscribeAllServices(userSessionId);
+            servicesManager.unsubscribeAllService(userSessionId);
             log.info("[ Manager ] : user session(" + userSessionId + ") unregisterUser, current user number: (" + userSessions.size() + ")");
         }
     }
-
-    private void unsubscribeAllServices(String userSessionId){
-        for (String serviceName : services){
-            BaseService service = getServiceInstanceFromIoc(serviceName);
-            service.unsubscribe(userSessionId);
-        }
-    }
-
-
-//    /**
-//     * 为userSeesionId订阅serviceType对应的服务
-//     * @param userSessionId
-//     * @param serviceType
-//     */
-//    public void subscribeService_(String userSessionId, String serviceType){
-//        BaseService serviceInstance = getServiceInstanceFromIoc(serviceType);
-//        serviceInstance.subscribe(userSessionId);
-//    }
-//
-//
-//    /**
-//     *
-//     * @param userSessionId
-//     * @param serviceType
-//     */
-//    public void unsubscribeService_(String userSessionId, String serviceType){
-//        BaseService serviceInstance = getServiceInstanceFromIoc(serviceType);
-//        serviceInstance.unsubscribe(userSessionId);
-//    }
-
-//
-    /**
-     * 通过JavaBean的名字从Ioc容器中获取服务实例
-     * @param serviceName
-     * @return
-     */
-    private BaseService getServiceInstanceFromIoc(String serviceName){
-        return (BaseService) IocUtil.getApplicationContext().getBean(serviceName);
-    }
-
 
 
     /**
