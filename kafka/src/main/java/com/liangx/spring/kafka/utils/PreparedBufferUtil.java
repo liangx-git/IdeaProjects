@@ -44,7 +44,7 @@ public class PreparedBufferUtil {
     }
 
     public boolean realMonitorPreparedBufferIsReady(){
-        return (realBuffer != null && realBuffer.size() == 20);
+        return (realBuffer != null && realBuffer.size() != 0);
     }
 
     /**

@@ -42,7 +42,7 @@ public class DataPersistenceService {
                     public void run() {
                        storingDatasAtWholePoint();
                     }
-                }, 0, 1, TimeUnit.MINUTES);
+                }, 0, 1, TimeUnit.HOURS);
 
         log.info("[ DurableKafkaConsumer ] : 启动定时任务（storingDatasAtWholePoint）");
     }

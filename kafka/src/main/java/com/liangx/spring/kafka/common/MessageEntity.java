@@ -25,8 +25,6 @@ public class MessageEntity {
     public final static String WEEKLY_MONITOR   = "weekly_monitor";
 
     public final static String SUBSCRIBE_REAL_MONITOR_SERVICE   = "subscribe_real_monitor_service";
-    public final static String SUBSCRIBE_DAILY_MONITOR_SERVICE  = "subscribe_daily_monitor_service";
-    public final static String SUBSCRIBE_WEEKLY_MONITOR_SERVICE = "subscribe_weekly_monitor_service";
     public final static String SUBSCRIBE_BACK_TRACKING_SERVICE  = "subscribe_back_tracking_service";
     public final static String SUBSCRIBE_SCHEDULED_MONITOR_SERVICE  = "subscribe_scheduled_monitor_service";
 

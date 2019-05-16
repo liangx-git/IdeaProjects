@@ -1,11 +1,10 @@
 package com.liangx.spring.kafka.services.BackTrackingService;
 
 import com.liangx.spring.kafka.common.MessageEntity;
-import com.liangx.spring.kafka.common.ServiceType;
 import com.liangx.spring.kafka.config.GeneralConsumerConfig;
 import com.liangx.spring.kafka.services.BaseService.BaseService;
+import com.liangx.spring.kafka.services.Manager.UserManager;
 import com.liangx.spring.kafka.services.RealMonitorService.RealMonitorService;
-import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
 import com.liangx.spring.kafka.utils.IocUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,7 @@ public class BackTrackingService extends BaseService {
 
     //用于BackTrackingTask线程运行期间获取用户提交的数据
     @Autowired
-    private UserSessionManager userSessionManager;
+    private UserManager userManager;
 
     //用于BackTrackingKafkaTask线程中实例化consumer进程
     @Autowired
@@ -32,6 +31,9 @@ public class BackTrackingService extends BaseService {
 
     @Autowired
     private IocUtil iocUtil;
+
+    @Autowired
+    private RealMonitorService realMonitorService;
 
     //创建线程池
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(
@@ -47,6 +49,11 @@ public class BackTrackingService extends BaseService {
 
     @Override
     public void subscribe(String userSessionId) {
+
+        if (realMonitorService.isSubscribed(userSessionId)){
+            realMonitorService.unsubscribe(userSessionId);
+        }
+
         if (!isRegistered(userSessionId)){
             register(userSessionId);
 
@@ -63,12 +70,17 @@ public class BackTrackingService extends BaseService {
             unregister(userSessionId);
 
             //通知前端关闭BackTrackingService
-            userSessionManager.setUserSessionMessageEntity(
+            userManager.setUserSessionMessageEntity(
                     userSessionId,
                     new MessageEntity(MessageEntity.BACK_TRACKING_DONE),
                     true);
         }
 
+    }
+
+
+    public boolean isSubscribed(String userSessionId){
+        return isRegistered(userSessionId);
     }
 
 //    protected void stopService(String userSessionId){

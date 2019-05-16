@@ -3,7 +3,7 @@ package com.liangx.spring.kafka.services.BackTrackingService;
 import com.liangx.spring.kafka.common.MessageEntity;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.config.GeneralConsumerConfig;
-import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
+import com.liangx.spring.kafka.services.Manager.UserManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
@@ -20,7 +20,7 @@ import java.util.*;
 public class BackTrackingTask implements Runnable{
 
     @Autowired
-    private UserSessionManager userSessionManager;
+    private UserManager userManager;
 
     @Autowired
     private BackTrackingService backTrackingService;
@@ -51,7 +51,7 @@ public class BackTrackingTask implements Runnable{
         while (true){
 
             //获取session当前传递的MessageEntity对象
-            MessageEntity message = userSessionManager.getUserSessionMessageEntity(userSessionId);
+            MessageEntity message = userManager.getUserSessionMessageEntity(userSessionId);
             if ((message.getRequestType()).equals(MessageEntity.BACK_TRACKING)){
 
                 //根据timestamp设置各分区的offset
@@ -63,11 +63,11 @@ public class BackTrackingTask implements Runnable{
                 message.setRequestType(MessageEntity.REAL_MONITOR);
                 List<WaterLevelRecord> waterLevelRecords = getRecordByConsumerPoll(consumer);
                 message.setBuffer(waterLevelRecords);
-                userSessionManager.setUserSessionMessageEntity(userSessionId, message, true);
+                userManager.setUserSessionMessageEntity(userSessionId, message, true);
 
                 //表示该次请求操作被处理
                 message.setRequestType(MessageEntity.BACK_TRACKING_PROCESSING);
-                userSessionManager.setUserSessionMessageEntity(userSessionId,message);
+                userManager.setUserSessionMessageEntity(userSessionId,message);
 
                 //设置用户下次操作超时时间
                 Calendar calendar = Calendar.getInstance();
@@ -82,7 +82,7 @@ public class BackTrackingTask implements Runnable{
                     e.printStackTrace();
                 }
 
-                message = userSessionManager.getUserSessionMessageEntity(userSessionId);
+                message = userManager.getUserSessionMessageEntity(userSessionId);
            }
 
            //用户超时，关闭BackTrackingListener,重新将当前session的WEBSOCKET_STATUS属性置为"REAL"，即当前session重新加入WebSocketListener监听队列

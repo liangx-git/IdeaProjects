@@ -6,7 +6,7 @@ import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.services.BaseService.BaseService;
 import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
-import com.liangx.spring.kafka.services.UserSessionManager.UserSessionManager;
+import com.liangx.spring.kafka.services.Manager.UserManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,7 +28,7 @@ public class ScheduledMonitorService extends BaseService {
     private WaterLevelRecordService waterLevelRecordService;
 
     @Autowired
-    private UserSessionManager userSessionManager;
+    private UserManager userManager;
 
     @Autowired
     private PreparedBufferUtil preparedBufferUtil;
@@ -88,7 +88,7 @@ public class ScheduledMonitorService extends BaseService {
         List<WaterLevelRecord>  hourlyBuffer = preparedBufferUtil.getHourlyBuffer();
         if (!hourlyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.DAILY_MONITOR, hourlyBuffer);
-            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
+            userManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
         }
     }
 
@@ -98,7 +98,7 @@ public class ScheduledMonitorService extends BaseService {
         List<WaterLevelRecord>  weeklyBuffer = preparedBufferUtil.getWeeklyBuffer();
         if (!weeklyBuffer.isEmpty()){
             MessageEntity messageEntity = new MessageEntity(MessageEntity.WEEKLY_MONITOR, weeklyBuffer);
-            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
+            userManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);    //sendToFrontEnd设为true表示将缓存立即发送到前端
         }
     }
 
@@ -171,7 +171,7 @@ public class ScheduledMonitorService extends BaseService {
     private void broadcastMessage(MessageEntity messageEntity){
         List<String> registeredUserSessionIds = getRegisteredUserSessionIds();
         for (String userSessionId : registeredUserSessionIds){
-            userSessionManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);
+            userManager.setUserSessionMessageEntity(userSessionId, messageEntity, true);
             log.info("[ ScheduleMonitorService ] :更新session(" + userSessionId + ")的" + messageEntity.getRequestType() +" Chart" );
         }
     }
