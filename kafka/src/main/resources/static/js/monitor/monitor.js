@@ -109,7 +109,7 @@ var updateChartRealByArray = function(datas){
     for (var i in datas){
         updateSeriesDatas(chartRealSeriesDatas, datas[i]);
     }
-    console.info("chartRealSeriesDatas = " + JSON.stringify(chartRealSeriesDatas));
+    // console.info("chartRealSeriesDatas = " + JSON.stringify(chartRealSeriesDatas));
     chartReal.series[0].update({'data': chartRealSeriesDatas});
 };
 
@@ -421,10 +421,10 @@ function ws() {
             var datas = JSON.parse(event.data);
             if (datas[0] === "real_monitor"){
                 if (datas[1] instanceof Array){
-                    console.info("收到数组数据");
+                    console.info("[ Websocket ] : 收到real-chart预缓存数据");
                     updateChartRealByArray(datas[1]);
                 }else{
-                    console.info("收到数据： record( timestmap = " + datas[1].timestamp + ", id = " + datas[1].id + ", siteName = " + datas[1].siteName + ", waterLevel = " + datas[1].waterLevel);
+                    console.info("[ Websocket ] : 收到实时监控数据");
                     updateChartReal(datas[1]);
                 }
 
@@ -435,16 +435,20 @@ function ws() {
                 }
             }else if(datas[0] === "daily_monitor"){
                 if (datas[1] instanceof Array){
+                    console.info("[ Websocket ] : 收到daily-chart预缓存数据");
                     updateChartDailyByArray(datas[1]);
                 }else{
+                    console.info("[ Websocket ] : 收到daily-chart数据");
                     updateChartDaily(datas[1]);
                     console.info("update chartDaily data = " + JSON.stringify(datas[1]));
                 }
 
             }else if(datas[0] === "weekly_monitor"){
                 if (datas[1] instanceof Array) {
+                    console.info("[ Websocket ] : 收到weekly-chart预缓存数据");
                     updateChartWeeklyByArray(datas[1]);
                 }else{
+                    console.info("[ Websocket ] : 收到weekly-chart数据");
                     updateChartWeekly(datas[1]);
                 }
             }else if(datas[0] === "monthly_monitor"){
@@ -455,6 +459,7 @@ function ws() {
                 }
 
             }else if (datas[0] === "back_tracking_done"){
+                console.info("[ Websocket ] : 收到back-tracking数据");
                 //后台的BackTrackingListener关闭时，将chart-slider滑快位置初始化为最右端
                 resetSlider();
 
@@ -472,12 +477,7 @@ function ws() {
             //订阅实时监控
             socket.send(JSON.stringify(["subscribe_real_monitor_service"]));
 
-            //订阅日监控
-            // socket.send(JSON.stringify(["subscribe_daily_monitor_service"]));
-
-            //订阅周监控预
-            // socket.send(JSON.stringify(["subscribe_weekly_monitor_service"]));
-
+            //订阅定时监控服务
             socket.send(JSON.stringify(["subscribe_scheduled_monitor_service"]));
 
         };

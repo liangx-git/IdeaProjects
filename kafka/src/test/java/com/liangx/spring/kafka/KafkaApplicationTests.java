@@ -1,8 +1,7 @@
 package com.liangx.spring.kafka;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
-import com.liangx.spring.kafka.services.RealMonitorService.RealMonitorService;
-import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
+import com.liangx.spring.kafka.services.DataPersistenceService.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.producer.KafkaProducer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.Calendar;

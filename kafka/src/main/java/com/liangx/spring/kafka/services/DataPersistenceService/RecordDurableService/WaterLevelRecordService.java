@@ -1,4 +1,4 @@
-package com.liangx.spring.kafka.services.RecordDurableService;
+package com.liangx.spring.kafka.services.DataPersistenceService.RecordDurableService;
 
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 

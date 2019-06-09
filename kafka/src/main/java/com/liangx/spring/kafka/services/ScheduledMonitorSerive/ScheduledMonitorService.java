@@ -4,7 +4,7 @@ import com.liangx.spring.kafka.common.MessageEntity;
 import com.liangx.spring.kafka.common.SiteInformation;
 import com.liangx.spring.kafka.common.WaterLevelRecord;
 import com.liangx.spring.kafka.services.BaseService.BaseService;
-import com.liangx.spring.kafka.services.RecordDurableService.WaterLevelRecordService;
+import com.liangx.spring.kafka.services.DataPersistenceService.RecordDurableService.WaterLevelRecordService;
 import com.liangx.spring.kafka.utils.PreparedBufferUtil;
 import com.liangx.spring.kafka.services.Manager.UserManager;
 import lombok.extern.slf4j.Slf4j;
@@ -139,7 +139,7 @@ public class ScheduledMonitorService extends BaseService {
         }
 
         //从持久层中获取每小时的平均水位
-        double avgWaterLevel = getAvgWaterLevelByTime("hour", -1);
+        double avgWaterLevel = getAvgWaterLevelByTime("day", -1);
 
         //准备数据
         MessageEntity messageEntity = new MessageEntity(
